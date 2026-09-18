@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create account &middot; Academic Recovery</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="auth-body">
+
+  <div class="auth-shell">
+
+    <!-- ---------- left: brand panel ---------- -->
+    <aside class="auth-brand">
+      <div class="brand">
+        <span class="brand-mark">AR</span>
+        <span class="brand-text">Academic&nbsp;Recovery</span>
+      </div>
+
+      <div class="auth-brand-body">
+        <h1>Start where<br />you actually are.</h1>
+        <p>
+          Add your courses and their grading breakdown once. From then on, every new
+          grade you enter re-runs the analysis and rewrites your plan automatically.
+        </p>
+
+        <ul class="auth-points">
+          <li>Every course keeps its own grading distribution</li>
+          <li>Exams, projects, quizzes &mdash; any weights you like</li>
+          <li>The plan adapts the moment a grade changes</li>
+        </ul>
+      </div>
+
+      <p class="auth-brand-foot">n8n &middot; Google Gemini &middot; Google Sheets</p>
+    </aside>
+
+    <!-- ---------- right: form ---------- -->
+    <main class="auth-panel">
+      <div class="auth-card">
+        <h2>Create your account</h2>
+        <p class="auth-sub">Takes about thirty seconds.</p>
+
+        <form id="signupForm" novalidate>
+          <div class="field">
+            <label for="studentId">Student ID</label>
+            <input id="studentId" type="text" placeholder="S001"
+                   autocomplete="username" autocapitalize="characters" />
+          </div>
+
+          <div class="field">
+            <label for="studentName">Full name</label>
+            <input id="studentName" type="text" placeholder="Mohamad Fayoumi"
+                   autocomplete="name" />
+          </div>
+
+          <div class="field">
+            <label for="weeklyHours">Study hours you have per week</label>
+            <input id="weeklyHours" type="number" min="1" max="60" step="0.5" value="15" />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="pw-wrap">
+              <input id="password" type="password" placeholder="Letters, numbers and symbols"
+                     autocomplete="new-password" />
+              <button type="button" class="pw-toggle" data-target="password"
+                      aria-label="Show password">Show</button>
+            </div>
+
+            <ul id="pwChecks" class="pw-checks">
+              <li data-check="length"><span class="tick"></span>At least 8 characters</li>
+              <li data-check="letter"><span class="tick"></span>Contains a letter</li>
+              <li data-check="number"><span class="tick"></span>Contains a number</li>
+              <li data-check="symbol"><span class="tick"></span>Contains a symbol <em>(recommended)</em></li>
+            </ul>
+          </div>
+
+          <div class="field">
+            <label for="confirm">Confirm password</label>
+            <div class="pw-wrap">
+              <input id="confirm" type="password" placeholder="Type it again"
+                     autocomplete="new-password" />
+              <button type="button" class="pw-toggle" data-target="confirm"
+                      aria-label="Show password">Show</button>
+            </div>
+          </div>
+
+          <div id="signupMsg" class="form-msg" hidden></div>
+
+          <button type="submit" class="btn btn-primary btn-block">Create account</button>
+        </form>
+
+        <p class="auth-switch">
+          Already registered? <a href="index.html">Sign in instead</a>
+        </p>
+
+        <p class="auth-note">
+          Your password is hashed with SHA-256 inside your browser before it is sent.
+          It is never transmitted or stored as plain text. This is a prototype &mdash;
+          don't reuse a password from another site.
+        </p>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="signup.js"></script>
+</body>
+</html>

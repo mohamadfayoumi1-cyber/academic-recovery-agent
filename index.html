@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in &middot; Academic Recovery</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="auth-body">
+
+  <div class="auth-shell">
+
+    <!-- ---------- left: brand panel ---------- -->
+    <aside class="auth-brand">
+      <div class="brand">
+        <span class="brand-mark">AR</span>
+        <span class="brand-text">Academic&nbsp;Recovery</span>
+      </div>
+
+      <div class="auth-brand-body">
+        <h1>Your semester,<br />honestly assessed.</h1>
+        <p>
+          Four AI agents read your real grades, weights and deadlines, work out what
+          is still achievable, and rebuild your study week every time something changes.
+        </p>
+
+        <ul class="auth-points">
+          <li>See the grade you can still reach &mdash; not just the one you have</li>
+          <li>Know exactly what each course needs from here</li>
+          <li>Get a weekly plan that fits the hours you actually have</li>
+        </ul>
+      </div>
+
+      <p class="auth-brand-foot">n8n &middot; Google Gemini &middot; Google Sheets</p>
+    </aside>
+
+    <!-- ---------- right: form ---------- -->
+    <main class="auth-panel">
+      <div class="auth-card">
+        <h2>Welcome back</h2>
+        <p class="auth-sub">Sign in with your student ID to see where you stand.</p>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="studentId">Student ID</label>
+            <input id="studentId" name="studentId" type="text" inputmode="text"
+                   placeholder="S001" autocomplete="username" autocapitalize="characters" />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="pw-wrap">
+              <input id="password" name="password" type="password"
+                     placeholder="Your password" autocomplete="current-password" />
+              <button type="button" class="pw-toggle" data-target="password"
+                      aria-label="Show password">Show</button>
+            </div>
+          </div>
+
+          <div id="loginMsg" class="form-msg" hidden></div>
+
+          <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+        </form>
+
+        <p class="auth-switch">
+          Don't have an account yet? <a href="signup.html">Create one</a>
+        </p>
+
+        <p class="auth-note">
+          Your password is hashed in your browser before it is sent &mdash; it never
+          travels or gets stored as plain text. Prototype build: please don't reuse
+          a password from another site.
+        </p>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

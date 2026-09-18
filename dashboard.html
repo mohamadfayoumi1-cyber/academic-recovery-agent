@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard &middot; Academic Recovery</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">AR</span>
+        <span class="brand-text">Academic&nbsp;Recovery</span>
+      </div>
+
+      <div class="topbar-right">
+        <span class="who">
+          <span id="whoName">&nbsp;</span>
+          <span id="whoId" class="who-id"></span>
+        </span>
+        <button id="logoutBtn" class="btn btn-quiet">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ GREETING ============ -->
+  <section class="greeting">
+    <div class="wrap">
+      <p class="eyebrow">Semester overview</p>
+      <h1 id="greetHead">Let's see where you stand.</h1>
+    </div>
+  </section>
+
+  <!-- ============ CONTROL PANEL ============ -->
+  <section class="wrap">
+    <div class="panel">
+      <div class="panel-row">
+        <div class="field">
+          <label for="hours">Study hours available this week</label>
+          <input id="hours" type="number" min="1" max="60" step="0.5" value="15" />
+        </div>
+        <button id="analyzeBtn" class="btn btn-primary">Analyze my semester</button>
+      </div>
+
+      <div class="panel-foot">
+        <label class="check">
+          <input id="demoMode" type="checkbox" checked />
+          <span>Demo mode (use sample data, no server needed)</span>
+        </label>
+        <button id="recalcBtn" class="btn btn-ghost" hidden>&#8635; Recalculate after a new grade</button>
+      </div>
+    </div>
+
+    <div id="status" class="status" hidden></div>
+  </section>
+
+  <!-- ============ RESULTS  (Raghid renders into this) ============ -->
+  <main id="dashboard" class="wrap dashboard"></main>
+
+  <footer class="footer">
+    <div class="wrap">
+      Built with n8n + Google Gemini + Google Sheets &middot; Academic Impact Track
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="sample-data.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
