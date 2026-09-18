@@ -273,6 +273,31 @@ Nothing downstream needed changing: the dashboard alert filter already tests
 for HIGH/CRITICAL only, `headline()` already skips courses whose average is
 null, and `if (c.recommended_weekly_hours)` hides the hours line at 0.
 
+## The agents know what day it is
+
+All five agents had **no idea what the date was**. Nothing in any prompt told
+them. A syllabus that writes "Midterm - November 6" with no year was therefore
+dated by guesswork, and the guess was often a year already gone, so a freshly
+uploaded course arrived with deadlines in the past.
+
+Each agent's prompt now opens with:
+
+```
+TODAY'S DATE IS {{ new Date().toISOString().slice(0,10) }}.
+```
+
+followed by a rule that suits the agent: the syllabus extractor must pick the
+year that puts a year-less date in the current or next term and must return an
+empty string rather than invent one; the analysts must judge "upcoming" against
+today; the planners must never schedule a session before today.
+
+The prompts are `=`-prefixed, so `{{ }}` is evaluated (trap 2). The date is
+resolved per execution, so it stays correct without anyone editing it.
+
+Verified live on 18 Sep 2026: a syllabus whose four deadlines carried **no
+year** came back as 2026-10-02, 2026-11-06, 2026-11-27 and 2026-12-19 — every
+one in the future — and a generated study plan had 0 items dated before today.
+
 ## Traps already hit — do not repeat these
 
 Every one of these cost real debugging time.
