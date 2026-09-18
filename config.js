@@ -32,6 +32,15 @@ window.CONFIG = {
   // POST { action:"save_grade", student_id, course_id, assessment_id, grade }
   SAVE_GRADE_URL: "",
 
+  /* --- connection test only (test-n8n.html) ------------------------ */
+  // Test URL: only works while "Listen for test event" is clicked in n8n,
+  // and it stops working after one request.
+  TEST_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook-test/website",
+
+  // Production URL: works always, but only after you press Publish in n8n.
+  // Swap TEST_URL to this one when you are done testing:
+  // "https://mohamadfayoumi.app.n8n.cloud/webhook/website"
+
   /* Keeps the demo alive while n8n is still being built.
      Set to false once the URLs above are filled in. */
   ALLOW_OFFLINE_DEMO: true,

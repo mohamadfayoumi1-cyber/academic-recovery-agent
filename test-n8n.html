@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>n8n Connection Test</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="site-head">
+  <div class="site-head-in">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">AR</span>
+      <span class="brand-text">Connection Test</span>
+    </a>
+    <a class="btn btn-quiet" href="index.html">Back to site</a>
+  </div>
+</header>
+
+<main class="wrap" style="max-width:780px;margin:0 auto;padding:36px 22px 80px">
+
+  <div class="page-head">
+    <h1>Is the website talking to n8n?</h1>
+    <p>This sends a real request from your browser, so it catches CORS problems that curl cannot.</p>
+  </div>
+
+  <div class="card">
+    <div class="field" style="margin-bottom:16px">
+      <label for="url">Webhook URL</label>
+      <input id="url" type="text" />
+      <span class="hint">Loaded from config.js. You can edit it here to try a different one.</span>
+    </div>
+
+    <div class="actions-row" style="margin-top:0">
+      <button class="btn btn-primary" id="run">Send test request</button>
+      <button class="btn btn-quiet" id="useProd">Use Production URL</button>
+      <button class="btn btn-quiet" id="useTest">Use Test URL</button>
+    </div>
+  </div>
+
+  <div id="result" style="margin-top:20px"></div>
+
+  <div class="card" style="margin-top:22px">
+    <h2 style="font-size:1rem;margin-bottom:10px">What n8n needs for this to pass</h2>
+    <ul style="margin:0;padding-left:20px;font-size:.89rem;color:var(--ink-soft);line-height:1.8">
+      <li><strong>Path</strong> = <code>website</code> (just the word, no https://)</li>
+      <li><strong>Respond</strong> = <em>Using 'Respond to Webhook' Node</em></li>
+      <li><strong>Options &rarr; Allowed Origins (CORS)</strong> = <code>*</code></li>
+      <li>Workflow is <strong>Published</strong> (for the Production URL)</li>
+      <li>Or <strong>Listen for test event</strong> is clicked (for the Test URL)</li>
+    </ul>
+  </div>
+
+</main>
+
+<script src="config.js"></script>
+<script src="test-n8n.js"></script>
+</body>
+</html>
