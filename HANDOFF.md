@@ -326,6 +326,19 @@ Every one of these cost real debugging time.
 
 ## Known issues
 
+- **`student_id` is an internal key, not a university ID.** It is generated
+  in `Handle Auth` as `S001`, `S002`, ... Its only job is to join Students →
+  Courses → Assessments → StudyPlans. Nothing shows it to the student, and
+  the real university ID is not collected anywhere. If you ever do want the
+  real one, note that every Courses and Assessments row points at the
+  generated id, so those rows have to be repointed at the same time.
+- It used to be computed as `rows.length + 1`, which produced **duplicate
+  ids** as soon as any row was deleted: 9 students, delete S005, 8 rows
+  remain, next signup is handed a second S009 and the two students' courses
+  and grades merge. Now computed as highest existing id + 1. Verified with
+  S001/S003/S004 present: the next signup correctly returned S005, where the
+  old formula would have returned a duplicate S004.
+
 - **`Google Gemini Chat Model3` and `Model4` were misconfigured** — no
   `modelName` set (so, the default preview model) *and* still on the **old,
   rate-limited API key**, while the other three had been moved to
