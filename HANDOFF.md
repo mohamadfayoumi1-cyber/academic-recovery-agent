@@ -230,6 +230,29 @@ to save the course. Demo step 5 was broken.
 
 Fixed in `Validate Syllabus Extraction`, which now normalises both shapes.
 
+## Editing a deadline and removing a course
+
+Workflow **4 - Course Admin** (`HBJl4v4Uq1llHcoM`), webhook `course-admin`,
+`COURSE_ADMIN_URL` in `config.js`. Two actions:
+
+- `update_deadline` {assessment_id, due_date} - writes the Assessments sheet,
+  then the page re-reads the academic state from n8n, because a deadline
+  changes risk and urgency.
+- `delete_course` {student_id, course_id} - **permanent**. Erases the course
+  row and every assessment row belonging to it. It refuses unless the course
+  belongs to the student who asked.
+
+Verified live: A001's deadline moved and its grade, weight and status were
+untouched; a throwaway course plus its 3 assessments were removed with the
+Courses tab going 12 to 11 rows and Assessments 55 to 52, leaving A001 intact.
+The same test exercised `confirm-syllabus`, which had never been run end to
+end before.
+
+**Row-number mechanics.** The Sheets node deletes by row number, so the code
+maps the Nth record of a full-tab read to sheet row N+1, and deletes
+assessment rows bottom-up - deleting a row shifts everything below it up.
+This assumes no blank rows in the middle of a tab.
+
 ## Traps already hit — do not repeat these
 
 Every one of these cost real debugging time.
@@ -317,7 +340,22 @@ Every one of these cost real debugging time.
     missed, the casualty was demo step 6, and it failed with a different
     error each time, which is why it read as three unrelated bugs.
 
-16. **The `n8n/` files in this repo drift from what is live.** Before trusting
+16. **A pasted workflow's Sheets nodes will not publish until each one is
+    opened.** Importing `4 - Course Admin` gave "5 nodes have issues, fix
+    them before publishing" with no visible error inside the nodes. Two
+    causes: `sheetName` must use the `list` mode with the tab's real gid
+    (Students `gid=0`, Courses `503525301`, Assessments `1677987941`), not
+    `name` mode; and after fixing that, each Sheets node still has to be
+    opened once so the editor re-validates it. Open them, then Publish.
+
+17. **The gviz CSV endpoint silently blanks values whose type does not match
+    the column.** Reading Courses through
+    `gviz/tq?tqx=out:csv` showed `student_id` empty for every `S0xx` row,
+    because the column now also holds numeric ids and gviz typed the whole
+    column as a number. It looks exactly like data loss. Use
+    `/export?format=csv&gid=<gid>` instead, which returns the raw cells.
+
+18. **The `n8n/` files in this repo drift from what is live.** Before trusting
     one, export the workflow from n8n and diff it. `project-bootcamp-fixed.json`
     was stale by five nodes' worth of fixes — importing it would have undone
     traps 3, 4, 5 and 6 in one go. It has now been rebased on a live export.
