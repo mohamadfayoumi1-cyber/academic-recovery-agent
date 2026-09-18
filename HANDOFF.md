@@ -31,9 +31,10 @@ Vercel auto-deploys on every push to `main`. Commit in GitHub Desktop → Push �
 - HIGH/CRITICAL risk alert cards on the dashboard
 - Chapter Summarizer **frontend** (waiting on its n8n workflow)
 
-### Not done — 2 tasks, both in n8n
+### Not done — 1 task
 
-Task 1 (the `name` bug) is **done and published**. See "Remaining work" below.
+Tasks 1 and 3 are **done and published live**. Only the Chapter Summary
+workflow (task 2) is left. See "Remaining work" below.
 
 ---
 
@@ -118,19 +119,19 @@ CHAPTER_SUMMARY_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/chapter-summa
 
 Commit and push. Test by uploading a chapter PDF from the dashboard.
 
-### 3. HIGH/CRITICAL risk email — built as JSON, not yet in n8n
+### 3. ~~HIGH/CRITICAL risk email~~ — DONE, published (Gmail node disabled)
 
-The nodes are written and validated: **`n8n/4-risk-email-nodes.json`**
-(two nodes) — also already merged into `n8n/project-bootcamp-fixed.json`.
+**Live in project bootcamp (fixed)**: `Academic Analyst Agent` →
+`Filter Risk Courses` → `Send Risk Alert Email`. Verified: an analysis for
+S001 returns Computer Networks at HIGH risk, so the branch fires on real data.
 
-To install: open **project bootcamp (fixed)**, select all the JSON in
-`n8n/4-risk-email-nodes.json`, copy it, click the n8n canvas and press
-**Ctrl+V**. Both nodes appear wired to each other. Then:
+**One step left to actually send mail:**
 
-1. Drag one connection: **Academic Analyst Agent** → **Filter Risk Courses**
-   (a second line out of the analyst, alongside Planner Agent).
-2. Click **Send Risk Alert Email** → pick your Gmail credential.
-3. **Publish** (trap 13 — nothing is live until you do).
+1. Click **Send Risk Alert Email** → attach a Gmail credential.
+2. Right-click the node → **Enable** (it is deliberately disabled).
+3. **Publish** (trap 13).
+
+Until then the node is skipped and nothing is sent.
 
 Design notes, which differ from the original plan on purpose:
 
@@ -215,18 +216,21 @@ Every one of these cost real debugging time.
 
 ## Known issues
 
-- **The repo workflow file is ahead of live, and has not been applied.**
-  `n8n/project-bootcamp-fixed.json` now contains two changes that are **not yet
-  in n8n**: the risk-email nodes, and the Gemini fix below. Applying them is
-  manual.
-- **`Google Gemini Chat Model3` and `Model4` were misconfigured live** — no
+- **`Google Gemini Chat Model3` and `Model4` were misconfigured** — no
   `modelName` set (so, the default preview model) *and* still on the **old,
   rate-limited API key**, while the other three had been moved to
   `gemini-3.1-flash-lite` and `Google Gemini(PaLM) Api account 2`. Those two
   feed **Re-Analyze Academic State** and **Adaptive Planner Agent** — the
-  adaptive re-plan path, which is **demo step 6**. This is the most likely
-  cause of the **21 failed executions out of 65 (32% failure rate)** showing on
-  the n8n overview. Corrected in the repo file; **still needs applying live.**
+  adaptive re-plan path, which is **demo step 6**. Most likely cause of the
+  **21 failed executions out of 65** on the n8n overview. **Fixed and published
+  live**, but the grade-update path has not been re-tested end to end since —
+  do that before demoing, it writes a real grade to the sheet.
+- **The analyst can exceed the hours budget.** A live S001 analysis with
+  `available_weekly_study_hours: 15` returned `recommended_weekly_hours: 20`
+  for one course, although the system prompt forbids the total exceeding what
+  the student has. It also returned an empty `reason` for the MEDIUM course
+  while the schema marks `reason` required. Worth a prompt tweak before the
+  demo, since "exactly what it takes" is the pitch line.
 - **Google Sheet is shared as "Anyone with the link can edit"**, and the
   sheet URL is inside the workflow JSON in this public repo. Restrict it to
   named teammates before presenting.

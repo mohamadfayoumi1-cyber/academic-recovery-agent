@@ -36,7 +36,8 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "disabled": true
     }
   ],
   "connections": {
