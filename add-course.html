@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Add Course &middot; Academic Recovery Agent</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="page-content">
+  <div class="page-head">
+    <h1>Add a Course</h1>
+    <p>Upload the syllabus and the grading structure will be read out for you.</p>
+  </div>
+
+  <div class="card" style="max-width:620px">
+    <form id="form" novalidate>
+      <div class="field" style="margin-bottom:18px">
+        <label for="target">Target grade for this course</label>
+        <input id="target" type="number" min="0" max="100" step="1" value="80" />
+        <span class="hint">What you are aiming to finish the course with.</span>
+      </div>
+
+      <div class="field">
+        <label>Course syllabus (PDF)</label>
+
+        <div class="drop" id="drop">
+          <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <p>Click to choose a PDF, or drag it here</p>
+          <span>The syllabus usually lists each assessment and its weight.</span>
+        </div>
+
+        <div class="file-chip" id="chip" hidden>
+          <span id="fileName"></span>
+          <button type="button" class="btn btn-quiet btn-sm" id="clearFile">Remove</button>
+        </div>
+
+        <input id="file" type="file" accept="application/pdf,.pdf" hidden />
+      </div>
+
+      <div id="msg" class="form-msg" hidden style="margin-top:16px"></div>
+
+      <div class="actions-row">
+        <button type="submit" class="btn btn-primary" id="submitBtn">Analyze Syllabus</button>
+        <a class="btn btn-quiet" href="courses.html">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div id="busy" hidden style="margin-top:20px;max-width:620px">
+    <div class="loading">
+      <span class="spinner"></span>
+      Reading your syllabus...
+    </div>
+    <p class="muted" style="margin-top:12px;font-size:.88rem">
+      Extracting the course name, assessments, weights and any dates it can find.
+      You will be able to check everything before it is saved.
+    </p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="sample-data.js"></script>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script src="ui.js"></script>
+<script src="nav.js"></script>
+<script src="add-course.js"></script>
+</body>
+</html>

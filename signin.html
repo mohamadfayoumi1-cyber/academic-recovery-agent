@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign In &middot; Academic Recovery Agent</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<main class="auth-page">
+  <div class="auth-card">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">AR</span>
+      <span class="brand-text">Academic&nbsp;Recovery&nbsp;Agent</span>
+    </a>
+
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to see where you stand.</p>
+
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@university.edu" autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="pw-wrap">
+          <input id="password" type="password" placeholder="Your password" autocomplete="current-password" />
+          <button type="button" class="pw-toggle" data-target="password">Show</button>
+        </div>
+      </div>
+
+      <div id="msg" class="form-msg" hidden></div>
+
+      <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+    </form>
+
+    <p class="auth-switch">Don't have an account? <a href="signup.html">Create one</a></p>
+
+    <p class="auth-note">
+      Your password is hashed in your browser before it is sent, so it is never
+      transmitted or stored as plain text. Prototype build &mdash; please don't reuse
+      a password from another site.
+    </p>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script src="sample-data.js"></script>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script src="signin.js"></script>
+</body>
+</html>

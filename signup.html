@@ -1,111 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create account &middot; Academic Recovery</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create Account &middot; Academic Recovery Agent</title>
+<link rel="stylesheet" href="styles.css" />
 </head>
-<body class="auth-body">
+<body>
 
-  <div class="auth-shell">
+<main class="auth-page">
+  <div class="auth-card wide">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">AR</span>
+      <span class="brand-text">Academic&nbsp;Recovery&nbsp;Agent</span>
+    </a>
 
-    <!-- ---------- left: brand panel ---------- -->
-    <aside class="auth-brand">
-      <div class="brand">
-        <span class="brand-mark">AR</span>
-        <span class="brand-text">Academic&nbsp;Recovery</span>
+    <h1>Create your account</h1>
+    <p class="sub">A few details so the planner knows your semester.</p>
+
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="fullName">Full name</label>
+        <input id="fullName" type="text" placeholder="Mohamad Fayoumi" autocomplete="name" />
       </div>
 
-      <div class="auth-brand-body">
-        <h1>Start where<br />you actually are.</h1>
-        <p>
-          Add your courses and their grading breakdown once. From then on, every new
-          grade you enter re-runs the analysis and rewrites your plan automatically.
-        </p>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@university.edu" autocomplete="username" />
+      </div>
 
-        <ul class="auth-points">
-          <li>Every course keeps its own grading distribution</li>
-          <li>Exams, projects, quizzes &mdash; any weights you like</li>
-          <li>The plan adapts the moment a grade changes</li>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="pw-wrap">
+          <input id="password" type="password" placeholder="Letters, numbers and symbols" autocomplete="new-password" />
+          <button type="button" class="pw-toggle" data-target="password">Show</button>
+        </div>
+        <ul id="pwChecks" class="pw-checks">
+          <li data-check="length"><span class="tick"></span>At least 8 characters</li>
+          <li data-check="letter"><span class="tick"></span>Contains a letter</li>
+          <li data-check="number"><span class="tick"></span>Contains a number</li>
+          <li data-check="symbol"><span class="tick"></span>Contains a symbol (recommended)</li>
         </ul>
       </div>
 
-      <p class="auth-brand-foot">n8n &middot; Google Gemini &middot; Google Sheets</p>
-    </aside>
-
-    <!-- ---------- right: form ---------- -->
-    <main class="auth-panel">
-      <div class="auth-card">
-        <h2>Create your account</h2>
-        <p class="auth-sub">Takes about thirty seconds.</p>
-
-        <form id="signupForm" novalidate>
-          <div class="field">
-            <label for="studentId">Student ID</label>
-            <input id="studentId" type="text" placeholder="S001"
-                   autocomplete="username" autocapitalize="characters" />
-          </div>
-
-          <div class="field">
-            <label for="studentName">Full name</label>
-            <input id="studentName" type="text" placeholder="Mohamad Fayoumi"
-                   autocomplete="name" />
-          </div>
-
-          <div class="field">
-            <label for="weeklyHours">Study hours you have per week</label>
-            <input id="weeklyHours" type="number" min="1" max="60" step="0.5" value="15" />
-          </div>
-
-          <div class="field">
-            <label for="password">Password</label>
-            <div class="pw-wrap">
-              <input id="password" type="password" placeholder="Letters, numbers and symbols"
-                     autocomplete="new-password" />
-              <button type="button" class="pw-toggle" data-target="password"
-                      aria-label="Show password">Show</button>
-            </div>
-
-            <ul id="pwChecks" class="pw-checks">
-              <li data-check="length"><span class="tick"></span>At least 8 characters</li>
-              <li data-check="letter"><span class="tick"></span>Contains a letter</li>
-              <li data-check="number"><span class="tick"></span>Contains a number</li>
-              <li data-check="symbol"><span class="tick"></span>Contains a symbol <em>(recommended)</em></li>
-            </ul>
-          </div>
-
-          <div class="field">
-            <label for="confirm">Confirm password</label>
-            <div class="pw-wrap">
-              <input id="confirm" type="password" placeholder="Type it again"
-                     autocomplete="new-password" />
-              <button type="button" class="pw-toggle" data-target="confirm"
-                      aria-label="Show password">Show</button>
-            </div>
-          </div>
-
-          <div id="signupMsg" class="form-msg" hidden></div>
-
-          <button type="submit" class="btn btn-primary btn-block">Create account</button>
-        </form>
-
-        <p class="auth-switch">
-          Already registered? <a href="index.html">Sign in instead</a>
-        </p>
-
-        <p class="auth-note">
-          Your password is hashed with SHA-256 inside your browser before it is sent.
-          It is never transmitted or stored as plain text. This is a prototype &mdash;
-          don't reuse a password from another site.
-        </p>
+      <div class="field">
+        <label for="confirm">Confirm password</label>
+        <div class="pw-wrap">
+          <input id="confirm" type="password" placeholder="Type it again" autocomplete="new-password" />
+          <button type="button" class="pw-toggle" data-target="confirm">Show</button>
+        </div>
       </div>
-    </main>
 
+      <div class="grid-2">
+        <div class="field">
+          <label for="university">University</label>
+          <input id="university" type="text" placeholder="Lebanese University" />
+        </div>
+        <div class="field">
+          <label for="major">Major</label>
+          <input id="major" type="text" placeholder="Computer Science" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="semester">Semester</label>
+          <input id="semester" type="text" placeholder="Fall 2026" />
+        </div>
+        <div class="field">
+          <label for="hours">Weekly study hours</label>
+          <input id="hours" type="number" min="1" max="80" step="0.5" value="15" />
+          <span class="hint">The planner allocates this across your courses.</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="gpa">Target GPA</label>
+        <input id="gpa" type="number" min="0" max="4" step="0.01" placeholder="3.50" />
+      </div>
+
+      <div id="msg" class="form-msg" hidden></div>
+
+      <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+    </form>
+
+    <p class="auth-switch">Already registered? <a href="signin.html">Sign in instead</a></p>
+
+    <p class="auth-note">
+      Your password is hashed with SHA-256 inside your browser before it is sent.
+      It is never transmitted or stored as plain text. Prototype build &mdash; don't
+      reuse a password from another site.
+    </p>
   </div>
+</main>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="signup.js"></script>
+<script src="config.js"></script>
+<script src="sample-data.js"></script>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script src="signup.js"></script>
 </body>
 </html>

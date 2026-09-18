@@ -1,10 +1,9 @@
-/* login.js  -  OWNER: Mohamad */
+/* signin.js */
 
-// already signed in? go straight through
 if (window.Auth.getSession()) window.location.replace("dashboard.html");
 
-const form = document.getElementById("loginForm");
-const msg  = document.getElementById("loginMsg");
+const form = document.getElementById("form");
+const msg  = document.getElementById("msg");
 
 function showMsg(text, kind) {
   if (!text) { msg.hidden = true; return; }
@@ -13,7 +12,6 @@ function showMsg(text, kind) {
   msg.textContent = text;
 }
 
-// show / hide password
 document.querySelectorAll(".pw-toggle").forEach(btn => {
   btn.addEventListener("click", () => {
     const input = document.getElementById(btn.dataset.target);
@@ -24,23 +22,23 @@ document.querySelectorAll(".pw-toggle").forEach(btn => {
   });
 });
 
-form.addEventListener("submit", async (e) => {
+form.addEventListener("submit", async e => {
   e.preventDefault();
   const btn = form.querySelector("button[type=submit]");
-
   showMsg("");
   btn.disabled = true;
   btn.textContent = "Signing in...";
 
   try {
-    await window.Auth.login(
-      document.getElementById("studentId").value,
+    await window.Auth.signIn(
+      document.getElementById("email").value,
       document.getElementById("password").value
     );
+    sessionStorage.removeItem("ar_analysis");
     window.location.href = "dashboard.html";
   } catch (err) {
     showMsg(err.message, "error");
     btn.disabled = false;
-    btn.textContent = "Sign in";
+    btn.textContent = "Sign In";
   }
 });

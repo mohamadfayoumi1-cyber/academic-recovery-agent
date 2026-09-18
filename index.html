@@ -1,83 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign in &middot; Academic Recovery</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Academic Recovery Agent</title>
+<meta name="description" content="An AI-powered academic assistant that analyzes your courses, identifies where you need help, and creates an adaptive study plan." />
+<link rel="stylesheet" href="styles.css" />
 </head>
-<body class="auth-body">
+<body>
 
-  <div class="auth-shell">
+<header class="site-head">
+  <div class="site-head-in">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">AR</span>
+      <span class="brand-text">Academic&nbsp;Recovery&nbsp;Agent</span>
+    </a>
+    <div class="actions">
+      <a class="btn btn-quiet" href="signin.html">Sign In</a>
+      <a class="btn btn-primary" href="signup.html">Get Started</a>
+    </div>
+  </div>
+</header>
 
-    <!-- ---------- left: brand panel ---------- -->
-    <aside class="auth-brand">
-      <div class="brand">
-        <span class="brand-mark">AR</span>
-        <span class="brand-text">Academic&nbsp;Recovery</span>
-      </div>
+<section class="hero">
+  <h1>Stay on Track.<br />Recover Smarter.</h1>
+  <p>
+    An AI-powered academic assistant that analyzes your courses, identifies where you
+    need help, and creates an adaptive study plan based on your actual academic performance.
+  </p>
+  <div class="actions">
+    <a class="btn btn-primary btn-lg" href="signup.html">Get Started</a>
+    <a class="btn btn-ghost btn-lg" href="signin.html">Sign In</a>
+  </div>
+</section>
 
-      <div class="auth-brand-body">
-        <h1>Your semester,<br />honestly assessed.</h1>
-        <p>
-          Four AI agents read your real grades, weights and deadlines, work out what
-          is still achievable, and rebuild your study week every time something changes.
-        </p>
+<section class="features">
+  <h2>What it does</h2>
+  <div class="feature-grid">
 
-        <ul class="auth-points">
-          <li>See the grade you can still reach &mdash; not just the one you have</li>
-          <li>Know exactly what each course needs from here</li>
-          <li>Get a weekly plan that fits the hours you actually have</li>
-        </ul>
-      </div>
+    <article class="feature">
+      <div class="ficon"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4"/></svg></div>
+      <h3>Automatic syllabus analysis</h3>
+      <p>Upload your syllabus as a PDF and the grading structure is read out for you &mdash; assessments, weights and dates.</p>
+    </article>
 
-      <p class="auth-brand-foot">n8n &middot; Google Gemini &middot; Google Sheets</p>
-    </aside>
+    <article class="feature">
+      <div class="ficon"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.3 3.9 2.4 17a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0"/></svg></div>
+      <h3>Academic risk detection</h3>
+      <p>Every course is scored from your real grades and weights, so you know which ones actually need attention.</p>
+    </article>
 
-    <!-- ---------- right: form ---------- -->
-    <main class="auth-panel">
-      <div class="auth-card">
-        <h2>Welcome back</h2>
-        <p class="auth-sub">Sign in with your student ID to see where you stand.</p>
+    <article class="feature">
+      <div class="ficon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2"/></svg></div>
+      <h3>Personalized study planning</h3>
+      <p>A weekly schedule built around the hours you actually have and the deadlines closest to you.</p>
+    </article>
 
-        <form id="loginForm" novalidate>
-          <div class="field">
-            <label for="studentId">Student ID</label>
-            <input id="studentId" name="studentId" type="text" inputmode="text"
-                   placeholder="S001" autocomplete="username" autocapitalize="characters" />
-          </div>
+    <article class="feature">
+      <div class="ficon"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg></div>
+      <h3>Adaptive recovery</h3>
+      <p>Enter a new grade and the whole plan is reassessed and rewritten &mdash; not generated once and forgotten.</p>
+    </article>
 
-          <div class="field">
-            <label for="password">Password</label>
-            <div class="pw-wrap">
-              <input id="password" name="password" type="password"
-                     placeholder="Your password" autocomplete="current-password" />
-              <button type="button" class="pw-toggle" data-target="password"
-                      aria-label="Show password">Show</button>
-            </div>
-          </div>
-
-          <div id="loginMsg" class="form-msg" hidden></div>
-
-          <button type="submit" class="btn btn-primary btn-block">Sign in</button>
-        </form>
-
-        <p class="auth-switch">
-          Don't have an account yet? <a href="signup.html">Create one</a>
-        </p>
-
-        <p class="auth-note">
-          Your password is hashed in your browser before it is sent &mdash; it never
-          travels or gets stored as plain text. Prototype build: please don't reuse
-          a password from another site.
-        </p>
-      </div>
-    </main>
+    <article class="feature">
+      <div class="ficon"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2"/></svg></div>
+      <h3>Study recommendations</h3>
+      <p>Specific topics to work on next, drawn from the assessments you have already sat.</p>
+    </article>
 
   </div>
+</section>
 
-  <script src="config.js"></script>
-  <script src="auth.js"></script>
-  <script src="login.js"></script>
+<footer class="site-foot">
+  Academic Recovery Agent &middot; Academic Impact Track
+</footer>
+
 </body>
 </html>

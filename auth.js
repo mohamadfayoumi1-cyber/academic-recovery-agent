@@ -1,32 +1,24 @@
 /* =====================================================================
-   auth.js   -   FRONT-END ONLY. No server code lives here.
+   auth.js  -  FRONT-END ONLY. Accounts live in Google Sheets via n8n.
 
-   Accounts are stored in Google Sheets and handled entirely by n8n.
-   This file does exactly three things:
-     1. hashes the password in the browser (SHA-256, salted with the ID)
-     2. POSTs to the n8n webhooks in config.js
-     3. keeps the signed-in session in the browser
-
-   The plain password NEVER leaves this file - n8n and the Sheet only
-   ever see the hash.
+   This file: hashes the password in the browser, calls the n8n auth
+   webhooks, and keeps the signed-in session. The plain password never
+   leaves this file - n8n and the Sheet only ever see a SHA-256 hash.
    ===================================================================== */
 
 const SESSION_KEY = "ar_session";
 
-/* ---- hashing -------------------------------------------------------- */
-async function hashPassword(studentId, password) {
-  const raw = "ar$" + String(studentId).toLowerCase() + "$" + password;
-
-  if (window.crypto && window.crypto.subtle) {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
-    return Array.from(new Uint8Array(buf))
-      .map(b => b.toString(16).padStart(2, "0"))
-      .join("");
+/* ---- hashing --------------------------------------------------------- */
+async function hashPassword(email, password) {
+  const raw = "ar$" + String(email).trim().toLowerCase() + "$" + password;
+  if (!(window.crypto && window.crypto.subtle)) {
+    throw new Error("This browser cannot hash passwords. Open the site over https or localhost.");
   }
-  throw new Error("This browser cannot hash passwords. Open the site over https or localhost.");
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-/* ---- password rules ------------------------------------------------- */
+/* ---- validation ------------------------------------------------------ */
 function passwordChecks(pw) {
   return {
     length: pw.length >= 8,
@@ -37,121 +29,93 @@ function passwordChecks(pw) {
 }
 function passwordIsValid(pw) {
   const c = passwordChecks(pw);
-  return c.length && c.letter && c.number;   // symbol encouraged, not required
+  return c.length && c.letter && c.number;
+}
+function emailIsValid(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
 }
 
-/* ---- talking to n8n -------------------------------------------------- */
-async function postToN8n(url, body) {
-  let res;
-  try {
-    res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  } catch (e) {
-    throw new Error("Could not reach the server. Check your connection.");
-  }
+/* ---- sign up --------------------------------------------------------- */
+async function signUp(form) {
+  const email = String(form.email || "").trim();
+  const name  = String(form.full_name || "").trim();
+  const pw    = String(form.password || "");
 
-  if (!res.ok) throw new Error("Server replied " + res.status + ". Check the n8n workflow is active.");
+  if (!name)                 throw new Error("Please enter your full name.");
+  if (!emailIsValid(email))  throw new Error("Please enter a valid email address.");
+  if (!passwordIsValid(pw))  throw new Error("Password must be at least 8 characters and include a letter and a number.");
+  if (pw !== form.confirm)   throw new Error("The two passwords do not match.");
 
-  let data;
-  try { data = await res.json(); }
-  catch (e) { throw new Error("The server did not return JSON."); }
-
-  if (data && data.success === false) throw new Error(data.error || "Request refused.");
-  return data;
-}
-
-/* =====================================================================
-   OFFLINE DEMO  -  only used when a URL in config.js is still empty.
-   Delete this block once n8n is live and set ALLOW_OFFLINE_DEMO to false.
-   ===================================================================== */
-const DEMO_KEY = "ar_demo_accounts";
-
-function demoRead() {
-  try { return JSON.parse(localStorage.getItem(DEMO_KEY)) || {}; } catch (e) { return {}; }
-}
-function demoWrite(a) { localStorage.setItem(DEMO_KEY, JSON.stringify(a)); }
-
-function offlineAllowed(url) {
-  return !url && window.CONFIG && window.CONFIG.ALLOW_OFFLINE_DEMO;
-}
-
-/* ---- create account -------------------------------------------------- */
-async function createAccount(form) {
-  const id   = String(form.student_id || "").trim();
-  const name = String(form.student_name || "").trim();
-  const pw   = String(form.password || "");
-
-  if (!id)                  throw new Error("Student ID is required.");
-  if (!name)                throw new Error("Please enter your full name.");
-  if (!passwordIsValid(pw)) throw new Error("Password must be at least 8 characters and include a letter and a number.");
-  if (pw !== form.confirm)  throw new Error("The two passwords do not match.");
-
-  const password_hash = await hashPassword(id, pw);
   const payload = {
     action: "signup",
-    student_id: id,
-    student_name: name,
-    weekly_hours: Number(form.weekly_hours) || 15,
-    password_hash,
+    email,
+    password_hash: await hashPassword(email, pw),
+    full_name: name,
+    university: String(form.university || "").trim(),
+    major: String(form.major || "").trim(),
+    semester: String(form.semester || "").trim(),
+    weekly_study_hours: Number(form.weekly_study_hours) || 15,
+    target_gpa: Number(form.target_gpa) || null,
   };
 
-  const url = window.CONFIG.SIGNUP_URL;
-
-  if (offlineAllowed(url)) {
-    const accounts = demoRead();
-    if (accounts[id.toLowerCase()]) throw new Error("An account with this student ID already exists. Try signing in.");
-    accounts[id.toLowerCase()] = payload;
-    demoWrite(accounts);
-    return payload;
-  }
-
-  return postToN8n(url, payload);
+  const account = await window.API.signUp(payload);
+  return saveSession(account, payload);
 }
 
 /* ---- sign in --------------------------------------------------------- */
-async function login(studentId, password) {
-  const id = String(studentId || "").trim();
-  if (!id) throw new Error("Enter your student ID.");
+async function signIn(email, password) {
+  email = String(email || "").trim();
+  if (!emailIsValid(email)) throw new Error("Please enter a valid email address.");
+  if (!password)            throw new Error("Please enter your password.");
 
-  const password_hash = await hashPassword(id, String(password || ""));
-  const url = window.CONFIG.LOGIN_URL;
+  const account = await window.API.signIn({
+    action: "login",
+    email,
+    password_hash: await hashPassword(email, password),
+  });
+  return saveSession(account, { email });
+}
 
-  let account;
-
-  if (offlineAllowed(url)) {
-    account = demoRead()[id.toLowerCase()];
-    if (!account) throw new Error("No account found for that student ID.");
-    if (account.password_hash !== password_hash) throw new Error("Incorrect password. Try again.");
-  } else {
-    account = await postToN8n(url, { action: "login", student_id: id, password_hash });
-    if (!account || !account.student_id) throw new Error("Incorrect student ID or password.");
-  }
-
+/* ---- session --------------------------------------------------------- */
+function saveSession(account, fallback) {
   const session = {
-    student_id:   account.student_id,
-    student_name: account.student_name || account.student_id,
-    weekly_hours: Number(account.weekly_hours) || 15,
-    signed_in_at: new Date().toISOString(),
+    student_id:         account.student_id,
+    full_name:          account.full_name || fallback.full_name || "",
+    email:              account.email || fallback.email || "",
+    university:         account.university || fallback.university || "",
+    major:              account.major || fallback.major || "",
+    semester:           account.semester || fallback.semester || "",
+    weekly_study_hours: Number(account.weekly_study_hours || fallback.weekly_study_hours) || 15,
+    target_gpa:         account.target_gpa ?? fallback.target_gpa ?? null,
+    signed_in_at:       new Date().toISOString(),
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   return session;
 }
 
-/* ---- session --------------------------------------------------------- */
 function getSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; }
 }
-function logout() { localStorage.removeItem(SESSION_KEY); }
-function requireSession(redirectTo) {
-  const session = getSession();
-  if (!session) { window.location.replace(redirectTo || "index.html"); return null; }
-  return session;
+
+function updateSession(patch) {
+  const s = getSession();
+  if (!s) return null;
+  const next = Object.assign({}, s, patch);
+  localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+  return next;
+}
+
+function signOut() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function requireSession() {
+  const s = getSession();
+  if (!s) { window.location.replace("signin.html"); return null; }
+  return s;
 }
 
 window.Auth = {
-  createAccount, login, logout, getSession, requireSession,
-  passwordChecks, passwordIsValid, hashPassword,
+  signUp, signIn, signOut, getSession, updateSession, requireSession,
+  passwordChecks, passwordIsValid, emailIsValid, hashPassword,
 };
