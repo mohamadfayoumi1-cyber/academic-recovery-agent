@@ -1,7 +1,12 @@
 # HANDOFF — Academic Recovery Agent
 
 Read this first if you are picking the project up in a new session.
-Last updated: 18 September 2026 (later session).
+Last updated: 18 September 2026, after an independent verification pass.
+
+> **Verify before you trust anything in here, including this file.**
+> Two sessions have now written confident status notes that were wrong.
+> The endpoints are public — `curl` them. A claim is not a test.
+> The quick sweep is at the bottom under "Verification sweep".
 
 ---
 
@@ -31,11 +36,27 @@ Vercel auto-deploys on every push to `main`. Commit in GitHub Desktop → Push �
 - HIGH/CRITICAL risk alert cards on the dashboard
 - Chapter Summarizer **frontend** (waiting on its n8n workflow)
 
-### All three features are live
+### Verified live on 18 Sep 2026 (by curl, against production)
 
-Tasks 1, 2 and 3 are done and published. The only step left before the
-Chapter Summarizer and risk email are fully usable is attaching a **Gmail
-credential** and enabling `Send Risk Alert Email`.
+| Path | Result |
+|---|---|
+| `auth` signup + login | `full_name` returned correctly — the name bug is gone |
+| `academic-analysis` | real analysis, courses + study plan |
+| `syllabus-upload` | returns `name` / `weight` / `due_date`; blank deadline preserved |
+| `chapter-summary` | real summary in ~6s |
+
+### Not verified — test these before demoing
+
+- **`update-grade` (the adaptive re-plan) — demo step 6.** Its two Gemini
+  nodes were re-pointed at a different model and it has not been run since.
+  Testing it writes a real grade to the sheet, so pick a course you are happy
+  to dirty.
+- **`confirm-syllabus` (add course)** — also writes real data.
+
+### Still to do
+
+- Attach a **Gmail credential** to `Send Risk Alert Email` and enable the node.
+- Fix the analyst exceeding the hours budget (see Known issues).
 
 ---
 
@@ -237,7 +258,18 @@ Every one of these cost real debugging time.
     it is not. Two test signups were burned proving this. If a fix appears to
     have no effect, check that button before debugging anything else.
 
-14. **The `n8n/` files in this repo drift from what is live.** Before trusting
+14. **Committing is not pushing, and pushing is not deployed.** A whole
+    session's work sat in three local commits that were never pushed. n8n was
+    correct, the repo was correct locally, and the *live site* still had
+    `CHAPTER_SUMMARY_URL: ""` — so the Chapter Summarizer was dead in
+    production while everything looked finished. Always finish with
+    `git status -sb` (it prints `[ahead N]` if you have not pushed) and then
+    curl the deployed file, not the local one:
+    `curl -s https://academic-recovery-agent.vercel.app/config.js | grep URL`.
+    Note `raw.githubusercontent.com` is CDN-cached for a few minutes; use the
+    GitHub contents API if you need the truth immediately.
+
+15. **The `n8n/` files in this repo drift from what is live.** Before trusting
     one, export the workflow from n8n and diff it. `project-bootcamp-fixed.json`
     was stale by five nodes' worth of fixes — importing it would have undone
     traps 3, 4, 5 and 6 in one go. It has now been rebased on a live export.
@@ -278,9 +310,10 @@ Every one of these cost real debugging time.
 
 ## Test data to clean up
 
-- Students sheet: rows **S010**, **S011**, **S012** and any other
-  `@probe.test` / `test@test.com` rows. S011 and S012 are from verifying the
-  `name` fix; all have blank names.
+- Students sheet: rows **S010**, **S011**, **S012**, **S015** and any other
+  `@probe.test` / `test@test.com` rows. S015 is from the verification pass and
+  is the only one with a name filled in — that row is the proof the fix works,
+  so delete it last.
 - An "Operating Systems" test course and its 4 assessments were already
   removed.
 
@@ -317,3 +350,34 @@ Lea (n8n), Alaa (slides + demo video).
 
 Do not click Analyze repeatedly — each click is two Gemini calls.
 Record a backup video before presenting.
+
+---
+
+## Verification sweep
+
+Run this before believing any status, including this document's.
+
+```bash
+B="https://mohamadfayoumi.app.n8n.cloud/webhook"
+
+# is the deployed site pointing at n8n at all?
+curl -s https://academic-recovery-agent.vercel.app/config.js | grep -E "URL|OFFLINE"
+
+# auth round trip - full_name must come back on login
+E="check$(date +%s)@probe.test"
+curl -s -X POST "$B/auth" -H "Content-Type: application/json"   -d "{\"action\":\"signup\",\"email\":\"$E\",\"password_hash\":\"p\",\"full_name\":\"Check\"}"
+curl -s -X POST "$B/auth" -H "Content-Type: application/json"   -d "{\"action\":\"login\",\"email\":\"$E\",\"password_hash\":\"p\"}"
+
+# analysis
+curl -s --max-time 200 -X POST "$B/academic-analysis" -H "Content-Type: application/json"   -d '{"student_id":"S001","available_weekly_study_hours":15}'
+```
+
+And in the repo:
+
+```bash
+git status -sb      # "[ahead N]" means the work is not on GitHub yet
+```
+
+`{"message":"Error in workflow"}` means an n8n node threw — open the
+**Executions** tab in n8n, click the red run, and read the node error. It is
+almost always one of the traps above.
