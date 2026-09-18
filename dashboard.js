@@ -52,6 +52,28 @@ function summaryBlock(data) {
   </div>`;
 }
 
+/* The single most useful sentence on the whole site: not the grade you
+   have, but the grade you can still reach. */
+function heroBlock(data) {
+  const line = UI.headline(data.courses);
+  if (!line) return "";
+
+  const critical = (data.courses || []).filter(c => c.risk_level === "CRITICAL").length;
+  const high     = (data.courses || []).filter(c => c.risk_level === "HIGH").length;
+
+  let sub = "Every course is on track.";
+  if (critical) sub = critical + " course" + (critical === 1 ? "" : "s") + " in recovery" +
+                      (high ? ", " + high + " at high risk" : "");
+  else if (high) sub = high + " course" + (high === 1 ? " needs" : "s need") + " attention";
+
+  return `
+  <section class="hero-card status-${UI.esc(data.overall_status)}">
+    <p class="hero-eyebrow">${UI.esc(UI.STATUS_LABEL[data.overall_status] || data.overall_status)}</p>
+    <h2>${UI.esc(line)}</h2>
+    <p class="hero-sub">${UI.esc(sub)}</p>
+  </section>`;
+}
+
 function changeAlert() {
   let change = null;
   try { change = JSON.parse(sessionStorage.getItem("ar_last_change")); } catch (e) {}
@@ -90,6 +112,8 @@ function render(data) {
       <h1>Welcome, ${UI.esc((SESSION.full_name || "student").split(" ")[0])}</h1>
       <p>Here is where your semester stands today.</p>
     </div>
+
+    ${heroBlock(data)}
 
     ${summaryBlock(data)}
 

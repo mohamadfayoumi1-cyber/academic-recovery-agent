@@ -492,3 +492,73 @@ table input.w { max-width: 92px; }
   .plan-priority { margin-top: 0; }
   .summary .v { font-size: 1.5rem; }
 }
+
+/* =====================================================================
+   HERO CARD  -  the achievability statement, the point of the product
+   ===================================================================== */
+
+.hero-card {
+  background: #0f3d29;
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 26px 30px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
+  border-left: 5px solid var(--brand-mid, #34a06a);
+}
+.hero-card.status-AT_RISK           { border-left-color: var(--high); }
+.hero-card.status-RECOVERY_REQUIRED { border-left-color: var(--critical); }
+
+.hero-eyebrow {
+  font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; opacity: .62; margin-bottom: 10px;
+}
+.hero-card h2 {
+  margin: 0; font-weight: 650;
+  font-size: clamp(1.15rem, 2.5vw, 1.6rem);
+  line-height: 1.38; letter-spacing: -.01em;
+}
+.hero-sub { margin: 12px 0 0; font-size: .88rem; opacity: .72; }
+
+/* =====================================================================
+   RECOVERY BAR  -  banked / lost / still winnable, out of 100 points
+   ===================================================================== */
+
+.bar {
+  position: relative;
+  display: flex;
+  height: 9px;
+  margin: 15px 0 9px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--line-2);
+}
+.bar-seg { display: block; height: 100%; }
+.bar-seg.earned { background: var(--brand); }
+.bar-seg.lost   { background: #e6cdd0; }
+.bar-seg.open   { background: #cfe4d8; }
+
+.bar-target {
+  position: absolute; top: -3px; bottom: -3px;
+  width: 2px; background: var(--ink);
+  transform: translateX(-1px);
+}
+.bar-target::after {
+  content: ""; position: absolute; top: -3px; left: -2px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--ink);
+}
+
+.bar-key {
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  font-size: .73rem; color: var(--ink-soft);
+}
+.bar-key span { display: inline-flex; align-items: center; gap: 5px; }
+.bar-key .sw { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.bar-key .sw.earned { background: var(--brand); }
+.bar-key .sw.lost   { background: #e6cdd0; }
+.bar-key .sw.open   { background: #cfe4d8; }
+
+@media (max-width: 600px) {
+  .hero-card { padding: 20px 20px; }
+  .bar-key { font-size: .7rem; gap: 3px 10px; }
+}
