@@ -1095,7 +1095,10 @@
         976
       ],
       "id": "e82c34b6-3351-4c29-b6f7-e2a6c51dc12f",
-      "name": "Re-Analyze Academic State"
+      "name": "Re-Analyze Academic State",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -1145,7 +1148,10 @@
         976
       ],
       "id": "99fc54c1-1207-4fb4-8444-5aa0fa9b61ad",
-      "name": "Adaptive Planner Agent"
+      "name": "Adaptive Planner Agent",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {

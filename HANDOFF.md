@@ -257,8 +257,11 @@ Every one of these cost real debugging time.
    **`gemini-3.1-flash-lite`**. Note the newer API key can reach gemini-3
    models but 404s on gemini-2.5 ones.
 
-7. **Retry On Fail** is on all three agents (3 tries, 5000 ms). Keep it —
-   Gemini returns transient "service unavailable" errors.
+7. **Retry On Fail must be on all FIVE agents**, not three. Earlier notes
+   said "all three agents", which is how `Re-Analyze Academic State` and
+   `Adaptive Planner Agent` ended up with no retry at all. Gemini returns
+   transient schema-mismatch and service errors; without retry a single
+   hiccup fails the whole request. All five now have 3 tries / 5000 ms.
 
 8. **A Sheets read after a multi-item node runs once per item**, returning
    the whole tab each time. Both assessment reads have **Execute Once** on.
@@ -296,7 +299,25 @@ Every one of these cost real debugging time.
     Note `raw.githubusercontent.com` is CDN-cached for a few minutes; use the
     GitHub contents API if you need the truth immediately.
 
-15. **The `n8n/` files in this repo drift from what is live.** Before trusting
+15. **THE THREE-OF-FIVE PATTERN — check this first on any new bug.**
+    There are five AI agents in `project bootcamp (fixed)`. Three sit on the
+    main path (Analyst, Planner, Syllabus) and two on the adaptive re-plan
+    path (`Re-Analyze Academic State`, `Adaptive Planner Agent`). **Three
+    separate fixes were applied to the first three and never to the last
+    two:**
+
+    | Fix | Main three | Adaptive two |
+    |---|---|---|
+    | Gemini model + newer API key | done | **missed** |
+    | Output parser set to JSON Schema mode | done | **missed** |
+    | Retry On Fail | done | **missed** |
+
+    All three are corrected now. But when you change anything on an agent,
+    change it on all five, and grep the JSON to confirm. Every time this was
+    missed, the casualty was demo step 6, and it failed with a different
+    error each time, which is why it read as three unrelated bugs.
+
+16. **The `n8n/` files in this repo drift from what is live.** Before trusting
     one, export the workflow from n8n and diff it. `project-bootcamp-fixed.json`
     was stale by five nodes' worth of fixes — importing it would have undone
     traps 3, 4, 5 and 6 in one go. It has now been rebased on a live export.
