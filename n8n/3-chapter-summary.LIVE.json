@@ -1,0 +1,203 @@
+{
+  "name": "3 - Chapter Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chapter-summary",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "cc33dd44-0001-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "cc33dd44-0001-4000-8000-0000000000ff"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "id": "cc33dd44-0002-4000-8000-000000000002",
+      "name": "Extract Chapter Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize this chapter for a university student who is revising it.\n\nCHAPTER TEXT:\n{{ $json.text }}\n\nProduce:\n1. overview - two to four sentences explaining what this chapter is about.\n2. key_concepts - the main ideas, as short phrases.\n3. important_definitions - terms the chapter defines, each with its definition.\n4. key_points - the things worth remembering for an exam.\n\nRules:\n- Use only what is in the chapter text above.\n- Do not invent facts, examples, definitions or figures.\n- If the chapter defines no terms, return an empty list rather than making some up.\n- Keep the language plain and study-friendly.\n- Do not put headings, markdown or numbering inside the values.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Chapter Summarizer in an AI Academic Recovery System.\n\nYou turn a chapter of course material into a revision summary a student can study from the night before an exam.\n\nBe concise and concrete, and prefer the chapter's own terminology. Never add information that is not in the text you were given, and never pad a list to make it look fuller - an empty list is better than an invented entry.\n\nReturn ONLY valid JSON matching the required schema."
+        }
+      },
+      "id": "cc33dd44-0003-4000-8000-000000000003",
+      "name": "Chapter Summarizer Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "id": "cc33dd44-0004-4000-8000-000000000004",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        224
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6ksnh4PfvnkOdYZP",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"overview\": {\n      \"type\": \"string\"\n    },\n    \"key_concepts\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" }\n    },\n    \"important_definitions\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"term\": { \"type\": \"string\" },\n          \"definition\": { \"type\": \"string\" }\n        },\n        \"required\": [\"term\", \"definition\"]\n      }\n    },\n    \"key_points\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" }\n    }\n  },\n  \"required\": [\"overview\", \"key_concepts\", \"important_definitions\", \"key_points\"]\n}"
+      },
+      "id": "cc33dd44-0005-4000-8000-000000000005",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const s    = $('Chapter Summarizer Agent').first().json.output || {};\nconst body = $('Webhook').first().json.body || {};\n\nconst list = v => (Array.isArray(v) ? v.filter(Boolean) : []);\n\nreturn [{ json: {\n  success: true,\n  student_id: body.student_id || '',\n  course_id: body.course_id || '',\n  course_name: body.course_name || '',\n  summary: {\n    overview: s.overview || '',\n    key_concepts: list(s.key_concepts),\n    important_definitions: list(s.important_definitions)\n      .filter(d => d && (d.term || d.definition))\n      .map(d => ({ term: d.term || '', definition: d.definition || '' })),\n    key_points: list(s.key_points),\n  },\n}}];"
+      },
+      "id": "cc33dd44-0006-4000-8000-000000000006",
+      "name": "Build Summary Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "cc33dd44-0007-4000-8000-000000000007",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Chapter Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Chapter Text": {
+      "main": [
+        [
+          {
+            "node": "Chapter Summarizer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chapter Summarizer Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Summary Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Chapter Summarizer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Chapter Summarizer Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Summary Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "04509b9d-6bba-4b86-bb27-d242ea598ba5",
+  "meta": {
+    "instanceId": "25e48049e4250284a6205f1af60f7ac8ab371335062837de2cb8973ceb304630"
+  },
+  "nodeGroups": [],
+  "id": "vNmENofDboWkBWkO",
+  "tags": []
+}

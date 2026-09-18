@@ -1,0 +1,457 @@
+{
+  "name": "2 - Auth (Signup + Login)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "website",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "26d1bac8-0a90-4b9a-9e43-7fb04ed63574",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        768
+      ],
+      "webhookId": "aa11bb22-0001-4000-8000-0000000000ff"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "mode": "list",
+          "cachedResultName": "AI Academic Recovery System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "cb900d04-5332-41c7-b9f1-42734615de21",
+      "name": "Read Students Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        768
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CZ5iJHXAC0LJEGPe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all()\n  .map(i => i.json)\n  .filter(r => r && Object.keys(r).length > 0);\n\nreturn [{ json: {\n  success: true,\n  message: 'n8n is connected and can read your Google Sheet.',\n  sheet: 'Students',\n  rows_found: rows.length,\n  columns_found: rows.length ? Object.keys(rows[0]) : [],\n  you_sent: $('Webhook').first().json.body,\n  time: new Date().toISOString(),\n}}];"
+      },
+      "id": "fa91c6b0-b8f6-4029-8dfa-46672bf7699c",
+      "name": "Build Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "d86a77cf-24c4-4ac9-9116-2bb0d7b90e13",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        592,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "mode": "list",
+          "cachedResultName": "AI Academic Recovery System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "fffc709c-2a06-4a7d-9e5e-1828f91e59a4",
+      "name": "Get Students",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -688,
+        1104
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CZ5iJHXAC0LJEGPe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook1').first().json.body || {};\nconst rows = $input.all().map(i => i.json).filter(r => r && r.email);\n\nconst action = String(body.action || 'login');\nconst email  = String(body.email || '').trim().toLowerCase();\nconst hash   = String(body.password_hash || '');\n\nconst found = rows.find(r => String(r.email).trim().toLowerCase() === email);\nconst fail  = m => [{ json: { _new: 'no', response: { success: false, error: m } } }];\n\n/* ---------- LOGIN ---------- */\nif (action === 'login') {\n  if (!found) return fail('No account found for that email.');\n  if (String(found.password_hash) !== hash) return fail('Incorrect email or password.');\n\n  return [{ json: { _new: 'no', response: {\n    success: true,\n    student_id: found.student_id,\n    email: found.email,\n    full_name: found.name,\n    university: found.university,\n    major: found.major,\n    semester: found.semester,\n    weekly_study_hours: Number(found.weekly_study_hours) || 15,\n    target_gpa: found.target_gpa || null,\n  }}}];\n}\n\n/* ---------- SIGN UP ---------- */\nif (found) return fail('An account with this email already exists.');\n\n/* The student types their own university student id on the sign up form.\n   It is the key that joins Students -> Courses -> Assessments -> StudyPlans,\n   so it has to be present and unique. */\nconst student_id = String(body.student_id || '').trim();\n\nif (!student_id) return fail('Please enter your student ID.');\n\nconst idTaken = rows.some(r => String(r.student_id || '').trim().toLowerCase() === student_id.toLowerCase());\nif (idTaken) return fail('An account with this student ID already exists.');\nconst name = body.full_name || '';\n\nreturn [{ json: {\n  _new: 'yes',\n\n  student_id: student_id,\n  name: name,\n  email: email,\n  password_hash: hash,\n  university: body.university || '',\n  major: body.major || '',\n  semester: body.semester || '',\n  weekly_study_hours: Number(body.weekly_study_hours) || 15,\n  target_gpa: body.target_gpa || '',\n  created_at: new Date().toISOString(),\n\n  response: {\n    success: true,\n    student_id: student_id,\n    email: email,\n    full_name: name,\n    university: body.university || '',\n    major: body.major || '',\n    semester: body.semester || '',\n    weekly_study_hours: Number(body.weekly_study_hours) || 15,\n    target_gpa: body.target_gpa || '',\n  },\n}}];"
+      },
+      "id": "40d11bc1-e7dc-4744-94b5-01b93e372220",
+      "name": "Handle Auth",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb22cc33-cond-0001",
+              "leftValue": "={{ $json._new }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "d2538685-455b-4d11-b165-59f50e6c29ac",
+      "name": "New Account?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "mode": "list",
+          "cachedResultName": "AI Academic Recovery System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "student_id",
+              "displayName": "student_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "password_hash",
+              "displayName": "password_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "university",
+              "displayName": "university",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "major",
+              "displayName": "major",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "semester",
+              "displayName": "semester",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "weekly_study_hours",
+              "displayName": "weekly_study_hours",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "target_gpa",
+              "displayName": "target_gpa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "handlingExtraData": "ignoreIt"
+        }
+      },
+      "id": "192d0809-323e-484b-8042-e04784d2f537",
+      "name": "Save New Account",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -16,
+        992
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CZ5iJHXAC0LJEGPe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "3c0e091c-14bb-41bc-b575-03865e840bf0",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -912,
+        1104
+      ],
+      "webhookId": "bb22cc33-0001-4000-8000-0000000000ff"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Handle Auth').first().json.response) }}",
+        "options": {}
+      },
+      "id": "40bdde12-4d55-42e9-8f88-5e52cde5fca9",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        1104
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read Students Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Students Sheet": {
+      "main": [
+        [
+          {
+            "node": "Build Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Report": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Students": {
+      "main": [
+        [
+          {
+            "node": "Handle Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Auth": {
+      "main": [
+        [
+          {
+            "node": "New Account?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Account?": {
+      "main": [
+        [
+          {
+            "node": "Save New Account",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save New Account": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get Students",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e8697667-7fa5-4f32-9bb0-7d63ae95ee13",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "25e48049e4250284a6205f1af60f7ac8ab371335062837de2cb8973ceb304630"
+  },
+  "nodeGroups": [],
+  "id": "ypUGe4yrdbdOxuzw",
+  "tags": []
+}
