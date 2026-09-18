@@ -1873,7 +1873,12 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "disabled": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xpbyu8NKDxg95kzv",
+          "name": "Gmail account"
+        }
+      },
       "onError": "continueRegularOutput"
     }
   ],
@@ -2483,7 +2488,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "5ba77024-57ec-4a38-ae37-ab6c62c8e257",
+  "versionId": "e0536914-d032-4b76-add3-b69016cfeedd",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "25e48049e4250284a6205f1af60f7ac8ab371335062837de2cb8973ceb304630"

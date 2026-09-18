@@ -1874,7 +1874,12 @@
       "maxTries": 3,
       "waitBetweenTries": 5000,
       "onError": "continueRegularOutput",
-      "disabled": true
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xpbyu8NKDxg95kzv",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "pinData": {},
