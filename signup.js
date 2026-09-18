@@ -41,6 +41,7 @@ form.addEventListener("submit", async e => {
   try {
     await window.Auth.signUp({
       full_name:          document.getElementById("fullName").value,
+      student_id:         document.getElementById("studentId").value,
       email:              document.getElementById("email").value,
       password:           pw.value,
       confirm:            document.getElementById("confirm").value,

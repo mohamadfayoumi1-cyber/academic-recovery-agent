@@ -41,13 +41,17 @@ async function signUp(form) {
   const name  = String(form.full_name || "").trim();
   const pw    = String(form.password || "");
 
+  const studentId = String(form.student_id || "").trim();
+
   if (!name)                 throw new Error("Please enter your full name.");
+  if (!studentId)            throw new Error("Please enter your student ID.");
   if (!emailIsValid(email))  throw new Error("Please enter a valid email address.");
   if (!passwordIsValid(pw))  throw new Error("Password must be at least 8 characters and include a letter and a number.");
   if (pw !== form.confirm)   throw new Error("The two passwords do not match.");
 
   const payload = {
     action: "signup",
+    student_id: studentId,
     email,
     password_hash: await hashPassword(email, pw),
     full_name: name,
