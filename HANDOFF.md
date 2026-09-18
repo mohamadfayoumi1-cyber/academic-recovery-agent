@@ -31,10 +31,11 @@ Vercel auto-deploys on every push to `main`. Commit in GitHub Desktop → Push �
 - HIGH/CRITICAL risk alert cards on the dashboard
 - Chapter Summarizer **frontend** (waiting on its n8n workflow)
 
-### Not done — 1 task
+### All three features are live
 
-Tasks 1 and 3 are **done and published live**. Only the Chapter Summary
-workflow (task 2) is left. See "Remaining work" below.
+Tasks 1, 2 and 3 are done and published. The only step left before the
+Chapter Summarizer and risk email are fully usable is attaching a **Gmail
+credential** and enabling `Send Risk Alert Email`.
 
 ---
 
@@ -68,7 +69,7 @@ All in `config.js`. Base: `https://mohamadfayoumi.app.n8n.cloud/webhook/`
 | `ADD_COURSE_URL` | `confirm-syllabus` | project bootcamp (fixed) | live |
 | `SAVE_GRADE_URL` | `update-grade` | project bootcamp (fixed) | live |
 | `PROFILE_URL` | — | not built | empty, falls back to session-only |
-| `CHAPTER_SUMMARY_URL` | `chapter-summary` | not imported yet | **empty — task 2** |
+| `CHAPTER_SUMMARY_URL` | `chapter-summary` | 3 - Chapter Summary (`vNmENofDboWkBWkO`) | live |
 
 `ALLOW_OFFLINE_DEMO` is `false`. Set it `true` and blank a URL to fall back
 to the fixtures in `sample-data.js` if you need to demo without n8n.
@@ -100,7 +101,7 @@ sheet row), `full_name: name` (the signup response).
 
 Note the repo copy still says `$('Webhook')` and so still does not match live.
 
-### 2. Chapter Summary workflow — not imported
+### 2. ~~Chapter Summary workflow~~ — DONE, published
 
 The file is ready and validated: `n8n/3-chapter-summary.json`, or import from
 <https://raw.githubusercontent.com/mohamadfayoumi1-cyber/academic-recovery-agent/main/n8n/3-chapter-summary.json>
@@ -151,6 +152,35 @@ or add a "last alerted" column before you turn it on.
 
 **This stays entirely inside n8n.** The frontend has no email code, credentials
 or webhook for it, by design.
+
+## Verified end to end (this session)
+
+Live probes against the production webhooks:
+
+| Path | Result |
+|---|---|
+| signup + login | S014, `full_name` returned correctly — the `name` bug is gone |
+| `academic-analysis` | 200 in 31s, S001 AT_RISK, Computer Networks HIGH, 5 plan items |
+| `syllabus-upload` | 200 in 13s, names + weights + dates all populate |
+| `chapter-summary` | 200 in 6s, overview + 6 concepts + 4 definitions + 4 points |
+
+**Not re-tested, and both write real data to the sheet:**
+
+- `confirm-syllabus` (add course)
+- `update-grade` (adaptive re-plan) — **this one matters**, because its two
+  Gemini nodes were re-pointed at a different model this session. Test it
+  once before demoing.
+
+### Bug found and fixed: syllabus assessment field names
+
+The Syllabus Extractor returns `assessment_name` / `deadline`. The website's
+data contract (README.md, `sample-data.js`, and what `confirm-syllabus`
+expects back) is `name` / `weight` / `due_date`. Nothing mapped between them,
+so the review screen rendered **every assessment with a blank name and blank
+date**, and its own validation (`Every assessment needs a name`) then refused
+to save the course. Demo step 5 was broken.
+
+Fixed in `Validate Syllabus Extraction`, which now normalises both shapes.
 
 ## Traps already hit — do not repeat these
 
