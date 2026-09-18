@@ -1,0 +1,397 @@
+{
+  "name": "4 - Course Admin",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-admin",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "aa11bb22-0001-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "aa11bb22-0001-4000-8000-0000000000ff"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "update_deadline"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aa11bb22-0002-4000-8000-000000000002",
+      "name": "Which Action?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "cachedResultName": "AI Academic Recovery System"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Assessments",
+          "cachedResultName": "Assessments"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "assessment_id"
+          ],
+          "value": {
+            "assessment_id": "={{ $json.body.assessment_id }}",
+            "deadline": "={{ $json.body.due_date }}"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "aa11bb22-0003-4000-8000-000000000003",
+      "name": "Update Deadline",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        460,
+        -120
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3NGLYcD26SMfPV4G",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, assessment_id: $('Webhook').first().json.body.assessment_id, due_date: $('Webhook').first().json.body.due_date, message: 'Deadline updated.' }) }}",
+        "options": {}
+      },
+      "id": "aa11bb22-0004-4000-8000-000000000004",
+      "name": "Deadline Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        700,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "cachedResultName": "AI Academic Recovery System"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Courses",
+          "cachedResultName": "Courses"
+        },
+        "options": {}
+      },
+      "id": "aa11bb22-0005-4000-8000-000000000005",
+      "name": "Read Courses",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        460,
+        120
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3NGLYcD26SMfPV4G",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "cachedResultName": "AI Academic Recovery System"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Assessments",
+          "cachedResultName": "Assessments"
+        },
+        "options": {}
+      },
+      "id": "aa11bb22-0006-4000-8000-000000000006",
+      "name": "Read Assessments",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        680,
+        120
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3NGLYcD26SMfPV4G",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/* Work out which sheet rows to erase for this course.\n\n   The Google Sheets node deletes by row number, so each matching record is\n   mapped back to its row: the Nth data row returned by a read of the whole\n   tab is sheet row N + 1, because row 1 is the header.\n\n   Assessment rows come back in DESCENDING order on purpose. Deleting a row\n   shifts every row below it up, so deleting bottom-up keeps the remaining\n   row numbers correct. */\n\nconst body = $('Webhook').first().json.body || {};\nconst course_id  = String(body.course_id || '').trim();\nconst student_id = String(body.student_id || '').trim();\n\nif (!course_id)  throw new Error('course_id is required.');\nif (!student_id) throw new Error('student_id is required.');\n\nconst courses = $('Read Courses').all().map(i => i.json);\nconst idx = courses.findIndex(\n  c => String(c.course_id).trim() === course_id &&\n       String(c.student_id).trim() === student_id\n);\n\n/* Refuse to touch anything unless the course belongs to this student. */\nif (idx === -1) throw new Error('That course was not found for this student.');\n\nconst courseRow = idx + 2;\n\nconst assessmentRows = $('Read Assessments').all()\n  .map((i, n) => ({ row: n + 2, json: i.json }))\n  .filter(r => String(r.json.course_id).trim() === course_id)\n  .map(r => r.row)\n  .sort((a, b) => b - a);\n\nreturn [{ json: {\n  course_id: course_id,\n  student_id: student_id,\n  course_name: (courses[idx] || {}).course_name || '',\n  courseRow: courseRow,\n  assessmentRows: assessmentRows,\n  deleted_assessments: assessmentRows.length,\n} }];\n"
+      },
+      "id": "aa11bb22-0007-4000-8000-000000000007",
+      "name": "Plan Deletions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "cachedResultName": "AI Academic Recovery System"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Courses",
+          "cachedResultName": "Courses"
+        },
+        "startIndex": "={{ $json.courseRow }}",
+        "numberToDelete": 1
+      },
+      "id": "aa11bb22-0008-4000-8000-000000000008",
+      "name": "Delete Course Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        120
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3NGLYcD26SMfPV4G",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, course_id: $('Plan Deletions').first().json.course_id, course_name: $('Plan Deletions').first().json.course_name, deleted_assessments: $('Plan Deletions').first().json.deleted_assessments, message: 'Course removed.' }) }}",
+        "options": {}
+      },
+      "id": "aa11bb22-0009-4000-8000-000000000009",
+      "name": "Delete Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1340,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/* One item per assessment row, still descending. Returning [] simply ends\n   the branch, which is fine - the response has already been sent. */\nconst rows = $('Plan Deletions').first().json.assessmentRows || [];\nreturn rows.map(r => ({ json: { row: r } }));\n"
+      },
+      "id": "aa11bb22-000a-4000-8000-00000000000a",
+      "name": "Split Assessment Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1HRk0eIh4FPK-ybYWNnyTshAijTF0UpnahWkEav28oBc",
+          "cachedResultName": "AI Academic Recovery System"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Assessments",
+          "cachedResultName": "Assessments"
+        },
+        "startIndex": "={{ $json.row }}",
+        "numberToDelete": 1
+      },
+      "id": "aa11bb22-000b-4000-8000-00000000000b",
+      "name": "Delete Assessment Rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1780,
+        120
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3NGLYcD26SMfPV4G",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Which Action?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Which Action?": {
+      "main": [
+        [
+          {
+            "node": "Update Deadline",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Courses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Deadline": {
+      "main": [
+        [
+          {
+            "node": "Deadline Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Courses": {
+      "main": [
+        [
+          {
+            "node": "Read Assessments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Assessments": {
+      "main": [
+        [
+          {
+            "node": "Plan Deletions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Deletions": {
+      "main": [
+        [
+          {
+            "node": "Delete Course Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Course Row": {
+      "main": [
+        [
+          {
+            "node": "Delete Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Response": {
+      "main": [
+        [
+          {
+            "node": "Split Assessment Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Assessment Rows": {
+      "main": [
+        [
+          {
+            "node": "Delete Assessment Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

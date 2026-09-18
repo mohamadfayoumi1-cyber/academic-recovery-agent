@@ -10,7 +10,8 @@ const root = document.getElementById("root");
 const courseId = new URLSearchParams(location.search).get("id");
 
 let current = null;       // latest analysis
-let editing = null;       // assessment_id being edited
+let editing = null;       // assessment_id whose grade is being edited
+let editingDate = null;   // assessment_id whose deadline is being edited
 
 /* ---- what changed between two analyses -------------------------------- */
 function describeChange(before, after) {
@@ -47,6 +48,9 @@ function headerBlock(c) {
     <a class="btn btn-quiet btn-sm" href="courses.html" style="margin-bottom:14px">&larr; All courses</a>
     <h1>${UI.esc(c.course_name)}</h1>
     <p>${UI.esc(c.course_code || "")}</p>
+    <button class="btn btn-quiet btn-sm" id="removeCourse" style="margin-top:10px">
+      Remove this course
+    </button>
   </div>
 
   <div class="summary">
@@ -81,6 +85,21 @@ function headerBlock(c) {
 
 /* ---- assessment table ------------------------------------------------- */
 function assessmentRow(a) {
+  /* editing just the deadline - the grade column stays read-only */
+  if (editingDate === a.assessment_id) {
+    return `
+    <tr data-id="${UI.esc(a.assessment_id)}">
+      <td><strong>${UI.esc(a.name)}</strong></td>
+      <td class="num">${a.weight}%</td>
+      <td>${a.grade === null ? '<span class="faint">&mdash;</span>' : "<strong>" + a.grade + "%</strong>"}</td>
+      <td><input class="w" id="dateInput" type="date" value="${UI.esc(a.due_date || "")}" /></td>
+      <td>
+        <button class="btn btn-primary btn-sm" data-savedate="${UI.esc(a.assessment_id)}">Save</button>
+        <button class="btn btn-quiet btn-sm" data-cancel="1">Cancel</button>
+      </td>
+    </tr>`;
+  }
+
   if (editing === a.assessment_id) {
     return `
     <tr data-id="${UI.esc(a.assessment_id)}">
@@ -107,6 +126,9 @@ function assessmentRow(a) {
       <span class="state ${UI.esc(a.status)}">${UI.esc(a.status)}</span>
       <button class="btn btn-ghost btn-sm" data-edit="${UI.esc(a.assessment_id)}" style="margin-left:8px">
         ${a.grade === null ? "Add grade" : "Update"}
+      </button>
+      <button class="btn btn-ghost btn-sm" data-editdate="${UI.esc(a.assessment_id)}" style="margin-left:4px">
+        Deadline
       </button>
     </td>
   </tr>`;
@@ -142,18 +164,81 @@ function render(banner) {
 
 function wire() {
   root.querySelectorAll("[data-edit]").forEach(b =>
-    b.addEventListener("click", () => { editing = b.dataset.edit; render(); }));
+    b.addEventListener("click", () => { editing = b.dataset.edit; editingDate = null; render(); }));
+
+  root.querySelectorAll("[data-editdate]").forEach(b =>
+    b.addEventListener("click", () => { editingDate = b.dataset.editdate; editing = null; render(); }));
 
   const cancel = root.querySelector("[data-cancel]");
-  if (cancel) cancel.addEventListener("click", () => { editing = null; render(); });
+  if (cancel) cancel.addEventListener("click", () => { editing = null; editingDate = null; render(); });
 
   const save = root.querySelector("[data-save]");
   if (save) save.addEventListener("click", () => submitGrade(save.dataset.save));
+
+  const saveDate = root.querySelector("[data-savedate]");
+  if (saveDate) saveDate.addEventListener("click", () => submitDeadline(saveDate.dataset.savedate));
 
   const input = document.getElementById("gradeInput");
   if (input) {
     input.focus();
     input.addEventListener("keydown", e => { if (e.key === "Enter") submitGrade(editing); });
+  }
+
+  const dateInput = document.getElementById("dateInput");
+  if (dateInput) {
+    dateInput.focus();
+    dateInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") submitDeadline(editingDate);
+    });
+  }
+
+  const remove = document.getElementById("removeCourse");
+  if (remove) remove.addEventListener("click", removeCourse);
+}
+
+/* ---- edit a deadline --------------------------------------------------- */
+async function submitDeadline(assessmentId) {
+  const input = document.getElementById("dateInput");
+  const due = input ? input.value : "";
+
+  root.innerHTML = '<div class="loading"><span class="spinner"></span> Saving the deadline...</div>';
+
+  try {
+    await window.API.updateDeadline({ assessment_id: assessmentId, due_date: due });
+
+    /* The deadline feeds risk and urgency, so re-read the academic state
+       from n8n rather than patching the cached copy in the browser. */
+    editingDate = null;
+    sessionStorage.removeItem("ar_analysis");
+    current = await UI.Store.load(SESSION);
+
+    render('<div class="form-msg">Deadline updated.</div>');
+  } catch (err) {
+    editingDate = null;
+    render('<div class="form-msg error">Could not save that deadline: ' + UI.esc(err.message) + "</div>");
+  }
+}
+
+/* ---- remove a course --------------------------------------------------- */
+async function removeCourse() {
+  const c = UI.Store.course(current, courseId);
+  const name = c ? c.course_name : "this course";
+
+  if (!confirm("Remove " + name + "?\n\nThe course and all of its assessments and grades " +
+               "will be permanently deleted. This cannot be undone.")) return;
+
+  root.innerHTML = '<div class="loading"><span class="spinner"></span> Removing the course...</div>';
+
+  try {
+    await window.API.deleteCourse({
+      student_id: SESSION.student_id,
+      course_id: courseId,
+    });
+
+    sessionStorage.removeItem("ar_analysis");
+    window.location.href = "courses.html";
+  } catch (err) {
+    render('<div class="form-msg error">Could not remove that course: ' + UI.esc(err.message) + "</div>");
   }
 }
 

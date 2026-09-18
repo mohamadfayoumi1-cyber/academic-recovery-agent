@@ -276,6 +276,34 @@ async function summarizeChapter(file, fields) {
   return data;
 }
 
+/* =====================================================================
+   Editing a deadline and removing a course.
+
+   Both go to the same n8n webhook, which switches on "action". Neither
+   touches the sheet from the browser.
+   ===================================================================== */
+async function updateDeadline(fields) {
+  const url = window.CONFIG.COURSE_ADMIN_URL;
+  if (!url) throw new Error("Editing deadlines is not connected yet.");
+
+  return post(url, {
+    action: "update_deadline",
+    assessment_id: fields.assessment_id,
+    due_date: fields.due_date,
+  });
+}
+
+async function deleteCourse(fields) {
+  const url = window.CONFIG.COURSE_ADMIN_URL;
+  if (!url) throw new Error("Removing a course is not connected yet.");
+
+  return post(url, {
+    action: "delete_course",
+    student_id: fields.student_id,
+    course_id: fields.course_id,
+  });
+}
+
 /* Demo helper so the presenter can reset between run-throughs. */
 function resetDemo() {
   localStorage.removeItem(DEMO_STAGE);
@@ -285,5 +313,6 @@ function resetDemo() {
 window.API = {
   signUp, signIn, updateProfile,
   analyze, extractSyllabus, addCourse, saveGrade, summarizeChapter,
+  updateDeadline, deleteCourse,
   resetDemo,
 };

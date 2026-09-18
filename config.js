@@ -37,6 +37,11 @@ window.CONFIG = {
   // POST multipart/form-data: file=<pdf>, student_id, course_id, course_name
   CHAPTER_SUMMARY_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/chapter-summary",
 
+  /* --- editing a deadline, removing a course ----------------------- */
+  // POST { action:"update_deadline", assessment_id, due_date }
+  // POST { action:"delete_course",   student_id, course_id }
+  COURSE_ADMIN_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/course-admin",
+
   /* --- connection test only (test-n8n.html) ------------------------ */
   // Test URL: only works while "Listen for test event" is clicked in n8n,
   // and it stops working after one request.
