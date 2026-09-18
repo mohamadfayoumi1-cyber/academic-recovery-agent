@@ -118,17 +118,60 @@ async function updateProfile(payload) {
    ACADEMICS
    ===================================================================== */
 
+/* A student who has not added any courses yet. n8n has nothing to
+   analyse and replies with an empty body, which is not an error. */
+function emptySemester(studentId, weeklyHours) {
+  return {
+    success: true,
+    student_id: studentId,
+    overall_status: "ON_TRACK",
+    available_weekly_study_hours: Number(weeklyHours) || 15,
+    today: new Date().toISOString().slice(0, 10),
+    courses: [],
+    study_plan: [],
+  };
+}
+
 /* Full academic state + study plan, produced by the n8n agents. */
 async function analyze(studentId, weeklyHours) {
   const url = window.CONFIG.ANALYZE_URL;
+
   if (!demoOn(url)) {
-    const data = await post(url, {
-      student_id: studentId,
-      available_weekly_study_hours: Number(weeklyHours) || 15,
-    });
-    if (!Array.isArray(data.courses)) {
-      throw new Error("The response had no 'courses' array. Check the Respond to Webhook node.");
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: studentId,
+          available_weekly_study_hours: Number(weeklyHours) || 15,
+        }),
+      });
+    } catch (e) {
+      throw new Error("Could not reach the server. Check your connection.");
     }
+
+    const text = (await res.text()).trim();
+
+    if (!res.ok) {
+      if (text.indexOf("Error in workflow") !== -1) {
+        throw new Error("The AI service is busy right now - it limits how many requests " +
+                        "it accepts per minute. Wait about a minute and try again.");
+      }
+      throw new Error("The analysis workflow replied " + res.status + ".");
+    }
+
+    if (!text) return emptySemester(studentId, weeklyHours);
+
+    let data;
+    try { data = JSON.parse(text); }
+    catch (e) { throw new Error("The analysis workflow did not return JSON."); }
+
+    if (data && data.success === false) {
+      throw new Error(data.error || data.message || "The analysis was refused.");
+    }
+    if (!Array.isArray(data.courses)) return emptySemester(studentId, weeklyHours);
+
     return data;
   }
 
