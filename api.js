@@ -102,13 +102,16 @@ async function signIn(payload) {
 
 async function updateProfile(payload) {
   const url = window.CONFIG.PROFILE_URL;
-  if (!demoOn(url)) return post(url, payload);
 
+  if (url) return post(url, payload);
+
+  /* No profile webhook yet. The change still applies to this session, so
+     the planner uses the new hours - it just is not written to the sheet. */
   const accounts = readLS(DEMO_ACCOUNTS, {});
   const key = Object.keys(accounts).find(k => accounts[k].student_id === payload.student_id);
   if (key) { Object.assign(accounts[key], payload); writeLS(DEMO_ACCOUNTS, accounts); }
-  await pause(400);
-  return { success: true };
+  await pause(300);
+  return { success: true, saved_locally: true };
 }
 
 /* =====================================================================
