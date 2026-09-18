@@ -310,10 +310,20 @@ Every one of these cost real debugging time.
 
 ## Test data to clean up
 
-- Students sheet: rows **S010**, **S011**, **S012**, **S015** and any other
-  `@probe.test` / `test@test.com` rows. S015 is from the verification pass and
-  is the only one with a name filled in — that row is the proof the fix works,
-  so delete it last.
+- Students sheet: rows **S010 through S015** — all six are `@probe.test`.
+  Read off the live sheet, not from memory; an earlier version of this list
+  said "S010, S011, S012 and S015" and silently missed S013 and S014.
+
+  S010–S012 have blank names (written before the `name` fix). S013, S014 and
+  S015 have names filled in — those three are the proof the fix works, so
+  delete them last.
+
+- **Eight real accounts have blank names and will not backfill.** S002–S009
+  are real people (including Mohamad, Lea, Raghid and three RHU students).
+  They signed up while the `name` bug was live, so their `name` cells are
+  empty and the dashboard greets them with nothing. Only S001 (Raghid) has a
+  name. **Type these eight in by hand before the demo** — a fresh signup is
+  fine now, but nothing repairs the existing rows.
 - An "Operating Systems" test course and its 4 assessments were already
   removed.
 
