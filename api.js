@@ -137,38 +137,74 @@ async function analyze(studentId, weeklyHours) {
   return data;
 }
 
-/* Gemini reads the PDF and returns the grading structure for review. */
+/* Gemini reads the PDF and returns the grading structure for review.
+   n8n wraps it in { data: ... } and names the fields assessment_name /
+   deadline, so normalise it to the shape the review page uses. */
 async function extractSyllabus(file, studentId, targetGrade) {
   const url = window.CONFIG.SYLLABUS_URL;
-  if (!demoOn(url)) {
-    return postFile(url, file, { student_id: studentId, target_grade: targetGrade });
+
+  if (demoOn(url)) {
+    await pause(1800);
+    const extracted = clone(window.SAMPLE.syllabus);
+    extracted.target_grade = Number(targetGrade) || 80;
+    return extracted;
   }
-  await pause(1800);
-  const extracted = clone(window.SAMPLE.syllabus);
-  extracted.target_grade = Number(targetGrade) || 80;
-  return extracted;
+
+  const raw = await postFile(url, file, { student_id: studentId, target_grade: targetGrade });
+  const d = raw.data || raw;
+
+  return {
+    success: true,
+    course_name: d.course_name || "",
+    course_code: d.course_code || "",
+    target_grade: Number(targetGrade) || 80,
+    assessments: (d.assessments || []).map(a => ({
+      name: a.assessment_name ?? a.name ?? "",
+      weight: a.weight === null || a.weight === undefined ? "" : a.weight,
+      due_date: a.deadline ?? a.due_date ?? "",
+    })),
+  };
 }
 
+/* n8n's confirm-syllabus expects assessment_name / deadline. */
 async function addCourse(payload) {
   const url = window.CONFIG.ADD_COURSE_URL;
-  if (!demoOn(url)) return post(url, payload);
 
-  const courses = readLS(DEMO_COURSES, []);
-  courses.push(window.SAMPLE.courseFromDraft(payload, "C" + (90 + courses.length)));
-  writeLS(DEMO_COURSES, courses);
-  await pause(600);
-  return { success: true };
+  if (demoOn(url)) {
+    const courses = readLS(DEMO_COURSES, []);
+    courses.push(window.SAMPLE.courseFromDraft(payload, "C" + (90 + courses.length)));
+    writeLS(DEMO_COURSES, courses);
+    await pause(600);
+    return { success: true };
+  }
+
+  return post(url, {
+    student_id: payload.student_id,
+    course_name: payload.course_name,
+    course_code: payload.course_code,
+    credits: 0,
+    target_grade: payload.target_grade,
+    assessments: (payload.assessments || []).map(a => ({
+      assessment_name: a.name,
+      weight: a.weight,
+      deadline: a.due_date || "",
+    })),
+  });
 }
 
-/* Sends the grade, then n8n re-runs the analyst + planner and returns
-   the new academic state. */
+/* Save the grade, then ask for the fresh academic state. Two calls keeps
+   the n8n side simple - update-grade only has to confirm the write. */
 async function saveGrade(payload) {
   const url = window.CONFIG.SAVE_GRADE_URL;
-  if (!demoOn(url)) return post(url, payload);
 
-  await pause(1600);
-  writeLS(DEMO_STAGE, "updated");
-  return clone(window.SAMPLE.analysisUpdated);
+  if (demoOn(url)) {
+    await pause(1600);
+    writeLS(DEMO_STAGE, "updated");
+    return clone(window.SAMPLE.analysisUpdated);
+  }
+
+  await post(url, payload);
+  return analyze(payload.student_id, payload.available_weekly_study_hours);
 }
 
 /* Demo helper so the presenter can reset between run-throughs. */

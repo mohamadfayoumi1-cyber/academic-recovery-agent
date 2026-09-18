@@ -186,6 +186,7 @@ async function submitGrade(assessmentId) {
       course_id: courseId,
       assessment_id: assessmentId,
       grade: grade,
+      available_weekly_study_hours: SESSION.weekly_study_hours,
     });
 
     editing = null;

@@ -21,17 +21,17 @@ window.CONFIG = {
 
   /* --- academics --------------------------------------------------- */
   // POST { student_id, available_weekly_study_hours }
-  ANALYZE_URL: "",
+  ANALYZE_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/academic-analysis",
 
   // POST multipart/form-data: file=<pdf>, student_id, target_grade
-  SYLLABUS_URL: "",
+  SYLLABUS_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/syllabus-upload",
 
   // POST { action:"add_course", student_id, course_name, course_code,
   //        target_grade, assessments:[{name,weight,due_date}] }
-  ADD_COURSE_URL: "",
+  ADD_COURSE_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/confirm-syllabus",
 
   // POST { action:"save_grade", student_id, course_id, assessment_id, grade }
-  SAVE_GRADE_URL: "",
+  SAVE_GRADE_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/update-grade",
 
   /* --- connection test only (test-n8n.html) ------------------------ */
   // Test URL: only works while "Listen for test event" is clicked in n8n,
@@ -44,5 +44,5 @@ window.CONFIG = {
 
   /* Keeps the demo alive while n8n is still being built.
      Set to false once the URLs above are filled in. */
-  ALLOW_OFFLINE_DEMO: true,
+  ALLOW_OFFLINE_DEMO: false,
 };
