@@ -562,3 +562,28 @@ table input.w { max-width: 92px; }
   .hero-card { padding: 20px 20px; }
   .bar-key { font-size: .7rem; gap: 3px 10px; }
 }
+
+/* =====================================================================
+   COURSE TONES  -  each course keeps the same colour across the week
+   ===================================================================== */
+
+.plan-item { border-left: 3px solid transparent; }
+.plan-item.tone-0 { border-left-color: #2f7d5b; }
+.plan-item.tone-1 { border-left-color: #3d6fa8; }
+.plan-item.tone-2 { border-left-color: #a2682a; }
+.plan-item.tone-3 { border-left-color: #7a5aa6; }
+.plan-item.tone-4 { border-left-color: #b0503f; }
+.plan-item.tone-5 { border-left-color: #2b7f86; }
+
+.plan-item.tone-0 .plan-course { color: #2f7d5b; }
+.plan-item.tone-1 .plan-course { color: #3d6fa8; }
+.plan-item.tone-2 .plan-course { color: #a2682a; }
+.plan-item.tone-3 .plan-course { color: #7a5aa6; }
+.plan-item.tone-4 .plan-course { color: #b0503f; }
+.plan-item.tone-5 .plan-course { color: #2b7f86; }
+
+/* a deadline inside a week gets flagged */
+.due-soon {
+  color: var(--critical);
+  font-weight: 650;
+}

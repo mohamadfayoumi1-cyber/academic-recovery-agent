@@ -84,6 +84,15 @@ function nextAssessment(course) {
   return upcoming[0] || null;
 }
 
+/* ---- a stable colour per course, so the same course looks the same
+   wherever it appears in the week ------------------------------------ */
+function courseTone(courseId) {
+  const str = String(courseId || "");
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return "tone-" + (h % 6);
+}
+
 /* ---- the recovery bar -----------------------------------------------
    Every course is 100 points. This splits them into what is already
    banked, what was dropped on graded work, and what is still winnable,
@@ -138,9 +147,11 @@ function headline(courses) {
 /* ---- the course card, used on the dashboard and My Courses ----------- */
 function courseCard(course) {
   const next = nextAssessment(course);
+  const urgent = next && next.days_until_due !== null && next.days_until_due <= 7;
   const nextLine = next
     ? esc(next.name) + " · " + shortDate(next.due_date) +
-      ' <span class="muted">(' + esc(deadlineText(next.days_until_due)) + ")</span>"
+      ' <span class="' + (urgent ? "due-soon" : "muted") + '">(' +
+      esc(deadlineText(next.days_until_due)) + ")</span>"
     : '<span class="muted">No upcoming assessments</span>';
 
   const verdict = course.current_average === null
@@ -204,7 +215,7 @@ function planDayBlock(day, opts) {
   const total = day.rows.reduce((s, r) => s + Number(r.hours || 0), 0);
 
   const items = day.rows.map(r => `
-    <li class="plan-item">
+    <li class="plan-item ${courseTone(r.course_id)}">
       <div class="plan-main">
         <p class="plan-course">${esc(r.course_name)}</p>
         <p class="plan-task">${esc(r.task)}</p>
@@ -237,6 +248,6 @@ function emptyState(title, body, actionHtml) {
 
 window.UI = {
   esc, num, dayName, shortDate, deadlineText, parseDate,
-  STATUS_LABEL, Store, riskPill, nextAssessment, recoveryBar, headline,
+  STATUS_LABEL, Store, riskPill, nextAssessment, recoveryBar, headline, courseTone,
   courseCard, groupPlanByDay, planDayBlock, emptyState,
 };
