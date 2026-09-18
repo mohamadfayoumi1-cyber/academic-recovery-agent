@@ -587,3 +587,102 @@ table input.w { max-width: 92px; }
   color: var(--critical);
   font-weight: 650;
 }
+
+/* =====================================================================
+   HIGH / CRITICAL RISK ALERTS
+   ===================================================================== */
+
+.risk-alert-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.risk-alert {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex; flex-direction: column;
+}
+.risk-alert.risk-HIGH     { border-left-color: var(--high);     background: #fffdfb; }
+.risk-alert.risk-CRITICAL { border-left-color: var(--critical); background: #fffcfc; }
+
+.risk-alert-head { margin-bottom: 14px; }
+.risk-alert-head .pill { display: inline-block; margin-bottom: 8px; }
+.risk-alert-head h3 { font-size: 1.08rem; }
+.risk-alert-head .code { font-size: .78rem; color: var(--ink-faint); font-weight: 600; margin-top: 2px; }
+
+.risk-facts {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  padding: 14px 0; border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2);
+}
+.risk-fact { display: flex; flex-direction: column; gap: 2px; }
+.risk-fact .k {
+  font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.risk-fact .v { font-size: .95rem; font-weight: 600; line-height: 1.35; }
+.risk-fact .v .muted { font-weight: 500; font-size: .82rem; }
+
+.risk-part { margin-top: 14px; }
+.risk-part .k {
+  font-size: .7rem; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink-faint); margin-bottom: 5px;
+}
+.risk-part p  { font-size: .88rem; color: var(--ink-soft); }
+.risk-part ul { margin: 0; padding-left: 18px; font-size: .88rem; color: var(--ink-soft); }
+.risk-part li { margin-bottom: 3px; }
+
+.risk-alert .btn { margin-top: 16px; align-self: flex-start; }
+
+/* =====================================================================
+   AI CHAPTER SUMMARIZER
+   ===================================================================== */
+
+#chapterSummary { display: block; margin-top: 4px; }
+#chapterSummary input[type="file"] { padding: 9px 11px; font-size: .88rem; }
+#chapterSummary select { cursor: pointer; }
+
+.summary-out {
+  margin-top: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px 26px;
+}
+.summary-out-head { padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.summary-out-head .k {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--brand); margin-bottom: 5px;
+}
+.summary-out-head h3 { font-size: 1.15rem; }
+
+.summary-part { margin-bottom: 22px; }
+.summary-part:last-child { margin-bottom: 0; }
+.summary-part h4 {
+  font-size: .74rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-faint); margin-bottom: 9px;
+}
+.summary-part p  { font-size: .93rem; line-height: 1.65; }
+.summary-part ul { margin: 0; padding-left: 20px; }
+.summary-part li { font-size: .92rem; line-height: 1.6; margin-bottom: 6px; }
+
+.defs { margin: 0; }
+.defs dt {
+  font-size: .92rem; font-weight: 650; color: var(--brand-dk); margin-top: 12px;
+}
+.defs dt:first-child { margin-top: 0; }
+.defs dd {
+  margin: 3px 0 0; padding-left: 13px;
+  border-left: 2px solid var(--low-br);
+  font-size: .9rem; color: var(--ink-soft); line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .risk-facts { grid-template-columns: 1fr 1fr; }
+  .summary-out { padding: 18px 18px; }
+}

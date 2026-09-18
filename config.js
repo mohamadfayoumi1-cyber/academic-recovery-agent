@@ -33,6 +33,12 @@ window.CONFIG = {
   // POST { action:"save_grade", student_id, course_id, assessment_id, grade }
   SAVE_GRADE_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/update-grade",
 
+  /* --- AI Chapter Summarizer --------------------------------------- */
+  // POST multipart/form-data: file=<pdf>, student_id, course_id, course_name
+  // >>> PASTE THE NEW n8n CHAPTER SUMMARY PRODUCTION URL HERE <<<
+  // e.g. "https://mohamadfayoumi.app.n8n.cloud/webhook/chapter-summary"
+  CHAPTER_SUMMARY_URL: "",
+
   /* --- connection test only (test-n8n.html) ------------------------ */
   // Test URL: only works while "Listen for test event" is clicked in n8n,
   // and it stops working after one request.

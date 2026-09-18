@@ -74,6 +74,87 @@ function heroBlock(data) {
   </section>`;
 }
 
+/* =====================================================================
+   HIGH / CRITICAL RISK ALERTS
+
+   The risk level is decided by the n8n Academic Analyst. This only reads
+   `risk_level` and renders whichever fields the backend actually sent -
+   anything missing is left out rather than invented.
+   ===================================================================== */
+function riskFact(label, valueHtml) {
+  return '<div class="risk-fact"><span class="k">' + UI.esc(label) +
+         '</span><span class="v">' + valueHtml + "</span></div>";
+}
+
+function riskAlerts(data) {
+  const flagged = (data.courses || [])
+    .filter(c => c.risk_level === "HIGH" || c.risk_level === "CRITICAL")
+    .sort((a, b) => (a.priority || 99) - (b.priority || 99));
+
+  if (!flagged.length) return "";
+
+  const cards = flagged.map(c => {
+    const facts = [];
+
+    if (c.current_average !== null && c.current_average !== undefined) {
+      facts.push(riskFact("Current grade", UI.esc(c.current_average) + "%"));
+    }
+    if (c.target_grade !== null && c.target_grade !== undefined) {
+      facts.push(riskFact("Target grade", UI.esc(c.target_grade) + "%"));
+    }
+
+    const next = UI.nextAssessment(c);
+    if (next) {
+      let when = next.due_date ? UI.shortDate(next.due_date) : "";
+      if (next.days_until_due !== null && next.days_until_due !== undefined) {
+        when += (when ? " · " : "") + UI.deadlineText(next.days_until_due);
+      }
+      facts.push(riskFact("Upcoming",
+        UI.esc(next.name) + (when ? '<br><span class="muted">' + UI.esc(when) + "</span>" : "")));
+    }
+
+    if (c.recommended_weekly_hours) {
+      facts.push(riskFact("Recommended study time",
+        UI.esc(c.recommended_weekly_hours) + " hours this week"));
+    }
+
+    const focus = Array.isArray(c.focus) ? c.focus.filter(Boolean) : [];
+
+    return `
+      <article class="risk-alert risk-${UI.esc(c.risk_level)}">
+        <header class="risk-alert-head">
+          <span class="pill risk-${UI.esc(c.risk_level)}">${UI.esc(c.risk_level)} RISK</span>
+          <h3>${UI.esc(c.course_name)}</h3>
+          ${c.course_code ? '<p class="code">' + UI.esc(c.course_code) + "</p>" : ""}
+        </header>
+
+        ${facts.length ? '<div class="risk-facts">' + facts.join("") + "</div>" : ""}
+
+        ${c.reason ? `
+          <div class="risk-part">
+            <p class="k">Why this is flagged</p>
+            <p>${UI.esc(c.reason)}</p>
+          </div>` : ""}
+
+        ${focus.length ? `
+          <div class="risk-part">
+            <p class="k">Focus on</p>
+            <ul>${focus.map(f => "<li>" + UI.esc(f) + "</li>").join("")}</ul>
+          </div>` : ""}
+
+        <a class="btn btn-primary btn-sm" href="study-plan.html">View Recovery Plan</a>
+      </article>`;
+  }).join("");
+
+  const n = flagged.length;
+  return `
+    <div class="section-head">
+      <h2>Needs your attention</h2>
+      <span class="muted">${n} course${n === 1 ? "" : "s"} flagged by the academic analysis</span>
+    </div>
+    <div class="risk-alert-grid">${cards}</div>`;
+}
+
 function changeAlert() {
   let change = null;
   try { change = JSON.parse(sessionStorage.getItem("ar_last_change")); } catch (e) {}
@@ -117,6 +198,8 @@ function render(data) {
 
     ${summaryBlock(data)}
 
+    ${riskAlerts(data)}
+
     <div class="section-head">
       <h2>My Courses</h2>
       <a class="btn btn-primary btn-sm" href="add-course.html">+ Add Course</a>
@@ -128,7 +211,11 @@ function render(data) {
       <a class="btn btn-ghost btn-sm" href="study-plan.html">View full plan</a>
     </div>
     ${planHtml}
+
+    <section id="chapterSummary"></section>
   `;
+
+  if (window.ChapterSummary) window.ChapterSummary.mount(courses);
 }
 
 async function start() {

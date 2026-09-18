@@ -48,7 +48,7 @@ async function post(url, body) {
 }
 
 /* ---- file upload POST -------------------------------------------------- */
-async function postFile(url, file, fields) {
+async function postFile(url, file, fields, failMessage) {
   const fd = new FormData();
   fd.append("file", file, file.name);
   Object.keys(fields || {}).forEach(k => fd.append(k, fields[k]));
@@ -63,7 +63,9 @@ async function postFile(url, file, fields) {
   try { data = await res.json(); }
   catch (e) { throw new Error("The server did not return JSON."); }
 
-  if (data && data.success === false) throw new Error(data.error || "Could not read that syllabus.");
+  if (data && data.success === false) {
+    throw new Error(data.error || failMessage || "Could not read that syllabus.");
+  }
   return data;
 }
 
@@ -253,6 +255,27 @@ async function saveGrade(payload) {
   return analyze(payload.student_id, payload.available_weekly_study_hours);
 }
 
+/* =====================================================================
+   AI CHAPTER SUMMARIZER
+   The PDF goes to n8n, which extracts the text and asks Gemini for a
+   study summary. No AI processing happens in the browser.
+   ===================================================================== */
+async function summarizeChapter(file, fields) {
+  const url = window.CONFIG.CHAPTER_SUMMARY_URL;
+
+  if (!url) {
+    throw new Error("The chapter summarizer is not connected yet. Add the webhook URL " +
+                    "as CHAPTER_SUMMARY_URL in config.js once the n8n workflow is published.");
+  }
+
+  const data = await postFile(url, file, fields, "The chapter could not be summarized.");
+
+  if (!data || !data.summary) {
+    throw new Error("The summarizer did not return a summary. Try again in a moment.");
+  }
+  return data;
+}
+
 /* Demo helper so the presenter can reset between run-throughs. */
 function resetDemo() {
   localStorage.removeItem(DEMO_STAGE);
@@ -261,6 +284,6 @@ function resetDemo() {
 
 window.API = {
   signUp, signIn, updateProfile,
-  analyze, extractSyllabus, addCourse, saveGrade,
+  analyze, extractSyllabus, addCourse, saveGrade, summarizeChapter,
   resetDemo,
 };
