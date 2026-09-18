@@ -298,6 +298,10 @@ a { color: inherit; }
 .pill.risk-MEDIUM   { color: var(--medium);   background: var(--medium-bg);   border-color: var(--medium-br); }
 .pill.risk-HIGH     { color: var(--high);     background: var(--high-bg);     border-color: var(--high-br); }
 .pill.risk-CRITICAL { color: var(--critical); background: var(--critical-bg); border-color: var(--critical-br); }
+.pill.risk-NOT_ANALYZED {
+  color: var(--ink-soft); background: var(--line-2); border-color: var(--line);
+  text-transform: none; letter-spacing: .01em; font-weight: 600;
+}
 
 .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(296px, 1fr)); }
 
@@ -306,6 +310,7 @@ a { color: inherit; }
 .course-card.risk-MEDIUM   { border-left-color: var(--medium); }
 .course-card.risk-HIGH     { border-left-color: var(--high); }
 .course-card.risk-CRITICAL { border-left-color: var(--critical); }
+.course-card.risk-NOT_ANALYZED { border-left-color: var(--line); }
 
 .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .card-head h3 { font-size: 1.02rem; }

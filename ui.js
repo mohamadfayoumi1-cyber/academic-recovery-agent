@@ -43,6 +43,14 @@ const STATUS_LABEL = {
   ON_TRACK:          "On track",
   AT_RISK:           "At risk",
   RECOVERY_REQUIRED: "Recovery required",
+  NOT_ANALYZED:      "Not analyzed yet",
+};
+
+/* Risk levels are shown as-is except the neutral one, which reads as a
+   sentence rather than a shout. A course only gets a real level once it has
+   a graded assessment - see Build Analysis Response in n8n. */
+const RISK_LABEL = {
+  NOT_ANALYZED: "Not analyzed yet",
 };
 
 /* ---- the cached academic state --------------------------------------- */
@@ -74,7 +82,8 @@ const Store = {
 
 /* ---- small pieces ---------------------------------------------------- */
 function riskPill(level) {
-  return '<span class="pill risk-' + esc(level) + '">' + esc(level) + "</span>";
+  const key = level || "NOT_ANALYZED";
+  return '<span class="pill risk-' + esc(key) + '">' + esc(RISK_LABEL[key] || key) + "</span>";
 }
 
 function nextAssessment(course) {
@@ -248,6 +257,6 @@ function emptyState(title, body, actionHtml) {
 
 window.UI = {
   esc, num, dayName, shortDate, deadlineText, parseDate,
-  STATUS_LABEL, Store, riskPill, nextAssessment, recoveryBar, headline, courseTone,
+  STATUS_LABEL, RISK_LABEL, Store, riskPill, nextAssessment, recoveryBar, headline, courseTone,
   courseCard, groupPlanByDay, planDayBlock, emptyState,
 };

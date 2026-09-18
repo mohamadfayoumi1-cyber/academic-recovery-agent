@@ -253,6 +253,26 @@ maps the Nth record of a full-tab read to sheet row N+1, and deletes
 assessment rows bottom-up - deleting a row shifts everything below it up.
 This assumes no blank rows in the middle of a tab.
 
+## Ungraded courses are not given a risk level
+
+A course with no graded assessment is returned as **`NOT_ANALYZED`**, shown as
+"Not analyzed yet", with `current_average`, `priority` all null and
+`recommended_weekly_hours` 0.
+
+Before this, `Build Analysis Response` ended with `a.risk_level || 'MEDIUM'`
+and `current_average: Number(s.current_average)`. A course added seconds ago
+therefore came back as **MEDIUM (or worse) at 0%** — `Number(null)` is 0 — so a
+brand new course looked like a student who had scored zero.
+
+The guard is `hasGrades = completed_weight > 0`, decided **in code, not by the
+agent**. `NOT_ANALYZED` was also added to both output parser enums and both
+analyst prompts so the model can return it, but the code decides regardless.
+`overall_status` is `NOT_ANALYZED` when no course has any grade.
+
+Nothing downstream needed changing: the dashboard alert filter already tests
+for HIGH/CRITICAL only, `headline()` already skips courses whose average is
+null, and `if (c.recommended_weekly_hours)` hides the hours line at 0.
+
 ## Traps already hit — do not repeat these
 
 Every one of these cost real debugging time.
