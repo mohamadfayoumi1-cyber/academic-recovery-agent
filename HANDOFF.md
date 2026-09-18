@@ -185,12 +185,39 @@ Live probes against the production webhooks:
 | `syllabus-upload` | 200 in 13s, names + weights + dates all populate |
 | `chapter-summary` | 200 in 6s, overview + 6 concepts + 4 definitions + 4 points |
 
-**Not re-tested, and both write real data to the sheet:**
+### Demo step 6 was broken, and is now fixed
 
-- `confirm-syllabus` (add course)
-- `update-grade` (adaptive re-plan) — **this one matters**, because its two
-  Gemini nodes were re-pointed at a different model this session. Test it
-  once before demoing.
+`update-grade` returned `{"message":"Error in workflow"}`. The n8n execution
+log said: **Problem in node 'Re-Analyze Academic State' — Model output
+doesn't fit required format.**
+
+Cause: `Structured Output Parser3` and `Parser4` still had their JSON Schema
+pasted into the **"Generate From JSON Example"** field — trap 4, exactly.
+Parsers 0, 1 and 2 had been converted to "Define using JSON Schema"; 3 and 4
+were missed.
+
+**Watch for this pattern.** The same session-shaped mistake hit the Gemini
+nodes: `Google Gemini Chat Model`/`1`/`2` were migrated to
+`gemini-3.1-flash-lite` and the newer API key while `Model3` and `Model4`
+were left behind. Whenever you fix one of these five-node families, fix all
+five. Three of five is the recurring failure mode here, and both times the
+casualty was the adaptive re-plan path.
+
+Fixed by moving the identical schema text into `inputSchema` with
+`schemaType: manual` — byte-identical to the working parsers, just in the
+right field. Published and verified:
+
+```
+POST /webhook/update-grade  {student_id S001, assessment_id A001, grade 56}
+-> success: true, 7 study plan items, "Grade updated and study plan adapted"
+```
+
+A001 was set to 56 for the test and **restored to its original 55**. The
+Assessments sheet is unchanged.
+
+**Not re-tested, and it writes real data to the sheet:**
+
+- `confirm-syllabus` (add course) — the only path never exercised end to end.
 
 ### Bug found and fixed: syllabus assessment field names
 
