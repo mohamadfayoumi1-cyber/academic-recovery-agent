@@ -9,10 +9,11 @@ window.CONFIG = {
   /* --- accounts ---------------------------------------------------- */
   // POST { action:"signup", email, password_hash, full_name, university,
   //        major, semester, weekly_study_hours, target_gpa }
-  SIGNUP_URL: "",
+  SIGNUP_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/auth",
 
   // POST { action:"login", email, password_hash }
-  LOGIN_URL: "",
+  // Same workflow - it switches on the "action" field.
+  LOGIN_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/auth",
 
   // POST { action:"update_profile", student_id, full_name, university,
   //        major, semester, weekly_study_hours, target_gpa }
