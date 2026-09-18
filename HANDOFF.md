@@ -1,7 +1,7 @@
 # HANDOFF — Academic Recovery Agent
 
 Read this first if you are picking the project up in a new session.
-Last updated: 18 September 2026.
+Last updated: 18 September 2026 (later session).
 
 ---
 
@@ -31,9 +31,9 @@ Vercel auto-deploys on every push to `main`. Commit in GitHub Desktop → Push �
 - HIGH/CRITICAL risk alert cards on the dashboard
 - Chapter Summarizer **frontend** (waiting on its n8n workflow)
 
-### Not done — 3 tasks, all in n8n
+### Not done — 2 tasks, both in n8n
 
-See "Remaining work" below.
+Task 1 (the `name` bug) is **done and published**. See "Remaining work" below.
 
 ---
 
@@ -80,33 +80,24 @@ and **2 - Auth (Signup + Login)** (`ypUGe4yrdbdOxuzw`). The original
 
 ## Remaining work
 
-### 1. The `name` bug — signups save a blank name
+### 1. ~~The `name` bug~~ — DONE, published
 
-The Students sheet column is **`name`**. The live `Handle Auth` code writes
-**`full_name`**, and the Append node ignores extra fields, so it is dropped
-silently.
+Fixed in **2 - Auth (Signup + Login)** and published. Three things the old
+notes got wrong, recorded here because they cost time:
 
-Proven with a live probe:
+- **The LOGIN branch was broken too.** It read `found.full_name`; the sheet
+  column is `name`. The old notes said login was already correct. It was not.
+  Both branches needed fixing.
+- **The live trigger node is `Webhook1`, not `Webhook`.** The repo copy
+  `n8n/2-auth-signup-login.json` references `$('Webhook')`, which in the live
+  graph is a *different, unrelated* trigger. Pasting the repo code in verbatim
+  breaks auth. The live node now correctly references `$('Webhook1')`.
+- **Saving over the API is not enough** — see trap 13.
 
-```
-signup -> "full_name":"Name Probe"   (only echoing the request back)
-login  -> full_name missing entirely (the sheet cell is blank)
-```
+The live code now has: `full_name: found.name` (login), `name: name` (the
+sheet row), `full_name: name` (the signup response).
 
-**Fix:** open **2 - Auth (Signup + Login)**, click the **Handle Auth** node
-once and press **Enter** (double-click is unreliable on sub-nodes), then in
-the SIGN UP branch change:
-
-```javascript
-  full_name: body.full_name || '',   // wrong
-  name:      body.full_name || '',   // right - matches the sheet column
-```
-
-The LOGIN branch should already read `full_name: found.name`. Save, Publish.
-
-Retest by signing up and then logging in — `full_name` must come back.
-
-Existing blank rows will not backfill; type those names in by hand.
+Note the repo copy still says `$('Webhook')` and so still does not match live.
 
 ### 2. Chapter Summary workflow — not imported
 
@@ -127,40 +118,38 @@ CHAPTER_SUMMARY_URL: "https://mohamadfayoumi.app.n8n.cloud/webhook/chapter-summa
 
 Commit and push. Test by uploading a chapter PDF from the dashboard.
 
-### 3. HIGH/CRITICAL risk email — not built
+### 3. HIGH/CRITICAL risk email — built as JSON, not yet in n8n
 
-Inside **project bootcamp (fixed)**, after the Academic Analyst:
+The nodes are written and validated: **`n8n/4-risk-email-nodes.json`**
+(two nodes) — also already merged into `n8n/project-bootcamp-fixed.json`.
 
-1. **Code** node — keep courses where `risk_level` is `HIGH` or `CRITICAL`
-2. **Google Sheets** read — Students, match on `student_id`, to get the email
-3. **Gmail** node — send
+To install: open **project bootcamp (fixed)**, select all the JSON in
+`n8n/4-risk-email-nodes.json`, copy it, click the n8n canvas and press
+**Ctrl+V**. Both nodes appear wired to each other. Then:
 
-Template:
+1. Drag one connection: **Academic Analyst Agent** → **Filter Risk Courses**
+   (a second line out of the analyst, alongside Planner Agent).
+2. Click **Send Risk Alert Email** → pick your Gmail credential.
+3. **Publish** (trap 13 — nothing is live until you do).
 
-```
-Subject: Academic Risk Alert - [Course Name]
+Design notes, which differ from the original plan on purpose:
 
-Hi [Student Name],
+- **No second Google Sheets read.** The original plan added one to fetch the
+  student's email. It is unnecessary — `Get student` already read that row at
+  the start of the execution, so `Filter Risk Courses` just reads
+  `$('Get student')`. It also avoids trap 8 (a Sheets node after a multi-item
+  node runs once per item and returns the whole tab each time).
+- The Gmail node has `onError: continueRegularOutput`, so a mail failure can
+  never break the analysis response the browser is waiting on.
+- `Filter Risk Courses` returns `[]` when nothing is HIGH/CRITICAL, which
+  stops the branch, so no mail goes out.
 
-Your Academic Recovery Agent has detected that [Course Name] is currently at
-[RISK LEVEL] academic risk.
+**Still unsolved:** every Analyze click re-sends alerts for every HIGH/CRITICAL
+course. There is no dedupe. Do not demo Analyze repeatedly with this enabled,
+or add a "last alerted" column before you turn it on.
 
-Reason:
-[reason from the Academic Analyst]
-
-Recommended Study Time:
-[recommended_weekly_hours] hours this week
-
-Focus Areas:
-[focus]
-
-Open your Academic Recovery Agent dashboard to review your recovery plan.
-```
-
-**This must stay entirely inside n8n.** The frontend has no email code,
-credentials or webhook for it, by design.
-
----
+**This stays entirely inside n8n.** The frontend has no email code, credentials
+or webhook for it, by design.
 
 ## Traps already hit — do not repeat these
 
@@ -208,10 +197,36 @@ Every one of these cost real debugging time.
 12. **A POST webhook opened in the address bar returns 404** — that is a GET
     request. It does not mean the webhook is broken.
 
+13. **n8n cloud has a draft/publish model, and this is the big one.**
+    Saving a workflow — including over the internal REST API — only writes a
+    **draft**. The previously *published* version keeps serving live webhook
+    traffic. Edits appear saved, the canvas shows them, and production still
+    runs the old code. The tell is the top-right button: it reads **"Publish"**
+    with an orange dot when a draft is pending, and greyed **"Published"** when
+    it is not. Two test signups were burned proving this. If a fix appears to
+    have no effect, check that button before debugging anything else.
+
+14. **The `n8n/` files in this repo drift from what is live.** Before trusting
+    one, export the workflow from n8n and diff it. `project-bootcamp-fixed.json`
+    was stale by five nodes' worth of fixes — importing it would have undone
+    traps 3, 4, 5 and 6 in one go. It has now been rebased on a live export.
+
 ---
 
 ## Known issues
 
+- **The repo workflow file is ahead of live, and has not been applied.**
+  `n8n/project-bootcamp-fixed.json` now contains two changes that are **not yet
+  in n8n**: the risk-email nodes, and the Gemini fix below. Applying them is
+  manual.
+- **`Google Gemini Chat Model3` and `Model4` were misconfigured live** — no
+  `modelName` set (so, the default preview model) *and* still on the **old,
+  rate-limited API key**, while the other three had been moved to
+  `gemini-3.1-flash-lite` and `Google Gemini(PaLM) Api account 2`. Those two
+  feed **Re-Analyze Academic State** and **Adaptive Planner Agent** — the
+  adaptive re-plan path, which is **demo step 6**. This is the most likely
+  cause of the **21 failed executions out of 65 (32% failure rate)** showing on
+  the n8n overview. Corrected in the repo file; **still needs applying live.**
 - **Google Sheet is shared as "Anyone with the link can edit"**, and the
   sheet URL is inside the workflow JSON in this public repo. Restrict it to
   named teammates before presenting.
@@ -229,8 +244,9 @@ Every one of these cost real debugging time.
 
 ## Test data to clean up
 
-- Students sheet: row **S010** (`nametest1789754905@probe.test`) and any
-  other `@probe.test` / `test@test.com` rows.
+- Students sheet: rows **S010**, **S011**, **S012** and any other
+  `@probe.test` / `test@test.com` rows. S011 and S012 are from verifying the
+  `name` fix; all have blank names.
 - An "Operating Systems" test course and its 4 assessments were already
   removed.
 

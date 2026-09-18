@@ -10,13 +10,13 @@
           "allowedOrigins": "*"
         }
       },
-      "id": "267ab450-82a5-4366-b499-6ddbdbe1ae54",
+      "id": "1507abe6-a78f-4826-84f3-6907047dca53",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -96,
-        -32
+        0,
+        0
       ],
       "webhookId": "34d78525-992a-407b-91b9-224bb865441e"
     },
@@ -46,17 +46,17 @@
         },
         "options": {}
       },
-      "id": "de3734fc-1c46-4918-8015-08c5430ffa25",
+      "id": "67879ce9-0601-4ed6-94b8-4d8bdbedfeb2",
       "name": "Get student",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        128,
-        -32
+        224,
+        0
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -87,17 +87,17 @@
         },
         "options": {}
       },
-      "id": "a5e72b45-3faa-49e0-b3a8-d25df9deb434",
+      "id": "1c6505a7-a2b1-4b1e-8e3a-4ae9a1db9734",
       "name": "Get Courses",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        352,
-        -32
+        448,
+        0
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -120,33 +120,33 @@
         },
         "options": {}
       },
-      "id": "9860697b-2ef6-4c03-b5aa-a4ce8bf650d2",
+      "id": "b0442b47-f29a-4466-a98c-0c80d7e1adaa",
       "name": "Get Assessments",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        560,
-        -32
+        656,
+        0
       ],
+      "executeOnce": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
-      },
-      "executeOnce": true
+      }
     },
     {
       "parameters": {
         "jsCode": "const student = $('Get student').first().json;\nconst courses = $('Get Courses').all().map(item => item.json);\nconst assessments = $('Get Assessments').all().map(item => item.json);\n\nconst results = [];\n\nfor (const course of courses) {\n\n  const courseAssessments = assessments.filter(\n    a => String(a.course_id) === String(course.course_id)\n  );\n\n  let weightedContribution = 0;\n  let completedWeight = 0;\n  let remainingWeight = 0;\n\n  for (const assessment of courseAssessments) {\n\n    const weight = Number(assessment.weight || 0);\n    const grade = assessment.grade;\n\n    if (grade !== undefined && grade !== null && grade !== '') {\n\n      weightedContribution += Number(grade) * (weight / 100);\n      completedWeight += weight;\n\n    } else {\n\n      remainingWeight += weight;\n\n    }\n  }\n\n  const currentAverage =\n    completedWeight > 0\n      ? (weightedContribution / completedWeight) * 100\n      : 0;\n\n  results.push({\n  student_id: student.student_id,\n  weekly_study_hours: Number(student.weekly_study_hours),\n  course_id: course.course_id,\n    course_name: course.course_name,\n    target_grade: Number(course.target_grade),\n\n    current_average: Number(currentAverage.toFixed(2)),\n\n    weighted_contribution: Number(\n      weightedContribution.toFixed(2)\n    ),\n\n    completed_weight: completedWeight,\n\n    remaining_weight: remainingWeight,\n\n    assessments: courseAssessments\n  });\n}\n\nreturn results.map(result => ({\n  json: result\n}));"
       },
-      "id": "9f9c034c-3fb4-4fdb-93c5-1e58b4af9693",
+      "id": "d466a20c-92e3-4720-8968-11bc8fb6e5be",
       "name": "Calculate Academic State",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        784,
-        -32
+        880,
+        0
       ]
     },
     {
@@ -158,31 +158,34 @@
           "systemMessage": "You are the Academic Analyst Agent in an AI Academic Recovery System.\n\nYour role is to analyze a student's academic situation and identify courses that require attention.\n\nYou must analyze every course independently.\n\nRisk levels:\n- LOW: Student is performing well and there is no immediate concern.\n- MEDIUM: Some attention is needed.\n- HIGH: Significant academic attention is required.\n- CRITICAL: Immediate recovery action is required.\n\nPriority:\n1 means the highest priority.\nHigher numbers mean lower priority.\n\nYour analysis must consider both academic performance and upcoming deadlines.\n\nDo not invent grades, assessments, deadlines, or other information.\n\nThe student's total recommended weekly study hours across all courses must not exceed the student's available weekly study hours.\n\nReturn ONLY valid JSON."
         }
       },
-      "id": "5acde0f1-de31-428e-a079-da0214b5db8d",
+      "id": "3c5261e7-b611-40b5-9817-1199a56e302d",
       "name": "Academic Analyst Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1008,
-        -32
-      ]
+        1104,
+        0
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
         "options": {}
       },
-      "id": "8736ada0-be32-43c4-8703-31b9a7af8c81",
+      "id": "76cc0f4c-3b95-484b-badb-b53f63561bd1",
       "name": "Google Gemini Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        896,
-        128
+        992,
+        160
       ],
       "credentials": {
         "googlePalmApi": {
-          "id": "wbd2N9u62pgZlZns",
-          "name": "Google Gemini(PaLM) Api account"
+          "id": "6ksnh4PfvnkOdYZP",
+          "name": "Google Gemini(PaLM) Api account 2"
         }
       }
     },
@@ -191,13 +194,13 @@
         "schemaType": "manual",
         "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"student_id\": {\n      \"type\": \"string\"\n    },\n    \"overall_status\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"ON_TRACK\",\n        \"AT_RISK\",\n        \"RECOVERY_REQUIRED\"\n      ]\n    },\n    \"courses\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"course_id\": {\n            \"type\": \"string\"\n          },\n          \"course_name\": {\n            \"type\": \"string\"\n          },\n          \"risk_level\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"LOW\",\n              \"MEDIUM\",\n              \"HIGH\",\n              \"CRITICAL\"\n            ]\n          },\n          \"priority\": {\n            \"type\": \"integer\"\n          },\n          \"recommended_weekly_hours\": {\n            \"type\": \"number\"\n          },\n          \"reason\": {\n            \"type\": \"string\"\n          },\n          \"focus\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          }\n        },\n        \"required\": [\n          \"course_id\",\n          \"course_name\",\n          \"risk_level\",\n          \"priority\",\n          \"recommended_weekly_hours\",\n          \"reason\",\n          \"focus\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"student_id\",\n    \"overall_status\",\n    \"courses\"\n  ]\n}"
       },
-      "id": "32d60add-2c3f-416d-ad73-4598036762ee",
+      "id": "1d23f4e9-24ca-4cc5-ad92-796635d03b41",
       "name": "Structured Output Parser",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1264,
-        112
+        1360,
+        144
       ]
     },
     {
@@ -209,32 +212,35 @@
           "systemMessage": "You are the Planner Agent in an AI Academic Recovery System.\n\nYour job is to transform academic risk analysis into a personalized weekly study plan.\n\nYou must:\n\n- Follow the priorities produced by the Academic Analyst.\n- Allocate study hours according to academic risk.\n- Consider upcoming deadlines.\n- Keep the total study time within the student's available weekly study hours.\n- Create specific and actionable study tasks.\n- Never invent courses, assessments, grades, deadlines, or topics.\n- Produce structured output that can be stored in Google Sheets.\n\nPriority 1 is the highest priority.\n\nThe plan should help the student recover academically while remaining realistic and sustainable."
         }
       },
-      "id": "99052d6f-986d-4543-8d05-52f80331c671",
+      "id": "91e2c7c8-4b0b-4b4f-98ee-1e04d7962552",
       "name": "Planner Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1472,
-        -32
+        1568,
+        0
       ],
-      "executeOnce": true
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
         "options": {}
       },
-      "id": "010e5f44-383d-44c6-980d-bcf5dea405e1",
+      "id": "8668eae1-dd71-4991-a3c7-57369861b12a",
       "name": "Google Gemini Chat Model1",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        1456,
-        160
+        1552,
+        192
       ],
       "credentials": {
         "googlePalmApi": {
-          "id": "wbd2N9u62pgZlZns",
-          "name": "Google Gemini(PaLM) Api account"
+          "id": "6ksnh4PfvnkOdYZP",
+          "name": "Google Gemini(PaLM) Api account 2"
         }
       }
     },
@@ -243,26 +249,26 @@
         "schemaType": "manual",
         "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"student_id\": {\n      \"type\": \"string\"\n    },\n    \"total_weekly_hours\": {\n      \"type\": \"number\"\n    },\n    \"study_plan\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"date\": {\n            \"type\": \"string\"\n          },\n          \"course_id\": {\n            \"type\": \"string\"\n          },\n          \"course_name\": {\n            \"type\": \"string\"\n          },\n          \"task\": {\n            \"type\": \"string\"\n          },\n          \"hours\": {\n            \"type\": \"number\"\n          },\n          \"priority\": {\n            \"type\": \"integer\"\n          }\n        },\n        \"required\": [\n          \"date\",\n          \"course_id\",\n          \"course_name\",\n          \"task\",\n          \"hours\",\n          \"priority\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"student_id\",\n    \"total_weekly_hours\",\n    \"study_plan\"\n  ]\n}"
       },
-      "id": "2f4296c6-5731-429d-b19b-770f6abe683a",
+      "id": "ad691e97-bd52-47b3-a4d6-638c7ff63ecf",
       "name": "Structured Output Parser1",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1648,
-        176
+        1744,
+        208
       ]
     },
     {
       "parameters": {
         "jsCode": "const planner = $('Planner Agent').first().json.output;\nconst studentId = planner.student_id;\nconst generatedAt = new Date().toISOString();\n\nconst rows = [];\nfor (const item of (planner.study_plan || [])) {\n  rows.push({\n    student_id: studentId,\n    date: item.date,\n    course_id: item.course_id,\n    course_name: item.course_name,\n    task: item.task,\n    hours: item.hours,\n    priority: item.priority,\n    generated_at: generatedAt\n  });\n}\n\nreturn rows.map(r => ({ json: r }));"
       },
-      "id": "5ae6e715-4648-46af-ba2a-6afea3828fa9",
+      "id": "a16e3bfd-496c-4b21-b5f1-e62f3008cdb6",
       "name": "Format Study Plan",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
-        -32
+        1824,
+        0
       ]
     },
     {
@@ -364,17 +370,17 @@
           "handlingExtraData": "insertInNewColumn"
         }
       },
-      "id": "60118cb5-f4fe-4d1d-b215-73f3a306b102",
+      "id": "cb8927b7-167c-47ed-a7ce-752239fac7f7",
       "name": "Save Study Plan",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2144,
-        -32
+        2240,
+        0
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -391,73 +397,78 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -80,
-        272
+        16,
+        304
       ],
-      "id": "a0eafd30-8656-44bb-ac20-98d385b996f3",
+      "id": "948b5c8f-59ed-426f-ae28-78917ddbdfcd",
       "name": "Syllabus Upload Webhook",
       "webhookId": "d60beefa-243f-495d-8eb0-23e26d312ab6"
     },
     {
       "parameters": {
         "operation": "pdf",
+        "binaryPropertyName": "file",
         "options": {}
       },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        128,
-        272
+        224,
+        304
       ],
-      "id": "468c10fe-6115-4087-b915-0fe5b05b8be8",
+      "id": "3b7ef2fc-ea3d-48df-b344-85d17504073e",
       "name": "Extract from File"
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Analyze the following university course syllabus.\n\nSYLLABUS TEXT:\n{{ $json.text }}\n\nExtract ONLY information explicitly stated in the syllabus.\n\nExtract:\n1. Course name\n2. Course code\n3. Assessments used to calculate the course grade\n4. Weight/percentage of each assessment\n5. Deadline or date of each assessment, if explicitly provided\n\nRules:\n- Do NOT invent missing information.\n- If the course name or code is not provided, return null.\n- If an assessment weight is not provided, return null.\n- If a deadline/date is not provided, return null.\n- Keep assessment names as close as possible to the syllabus wording.\n- Do not assume dates, weights, or assessments based on typical university courses.\n- Do not calculate or fill missing percentages.\n- Include every graded assessment explicitly mentioned in the syllabus.\n\nReturn the result using the required structured output.",
+        "text": "=Analyze the following university course syllabus.\n\nSYLLABUS TEXT:\n{{  $json.text  }}\n\nExtract ONLY information explicitly stated in the syllabus.\n\nExtract the course name, the course code, every assessment used to calculate the course grade, the weight of each assessment, and the deadline of each assessment when one is given.\n\nRules:\n- Do NOT invent missing information.\n- If the course name or code is not stated, return an empty string.\n- If an assessment weight is not stated, return 0.\n- If a deadline is not stated, return an empty string.\n- Format every deadline as YYYY-MM-DD.\n- Keep assessment names close to the syllabus wording.\n- Do not assume weights or dates from typical university courses.\n- Do not calculate or fill in missing percentages.\n- Include every graded assessment mentioned.\n\nReturn the result using the required structured output.",
         "hasOutputParser": true,
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        368,
-        272
+        464,
+        304
       ],
-      "id": "8ba882d0-ab24-4130-a192-7a7e13902229",
-      "name": "Syllabus Extractor Agent"
+      "id": "250bb992-3839-4f12-849c-f25898e36e96",
+      "name": "Syllabus Extractor Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        240,
-        608
+        336,
+        640
       ],
-      "id": "bea6d551-d68e-4762-a524-3b5461c561e3",
+      "id": "c14540cc-b357-4470-8204-0af3a062a0c3",
       "name": "Google Gemini Chat Model2",
       "credentials": {
         "googlePalmApi": {
-          "id": "wbd2N9u62pgZlZns",
-          "name": "Google Gemini(PaLM) Api account"
+          "id": "6ksnh4PfvnkOdYZP",
+          "name": "Google Gemini(PaLM) Api account 2"
         }
       }
     },
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"course_name\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"course_code\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"assessments\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"assessment_name\": {\n            \"type\": \"string\"\n          },\n          \"weight\": {\n            \"type\": [\"number\", \"null\"]\n          },\n          \"deadline\": {\n            \"type\": [\"string\", \"null\"]\n          }\n        },\n        \"required\": [\n          \"assessment_name\",\n          \"weight\",\n          \"deadline\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"course_name\",\n    \"course_code\",\n    \"assessments\"\n  ]\n}"
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"course_name\": { \"type\": \"string\" },\n    \"course_code\": { \"type\": \"string\" },\n    \"assessments\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"assessment_name\": { \"type\": \"string\" },\n          \"weight\": { \"type\": \"number\" },\n          \"deadline\": { \"type\": \"string\" }\n        },\n        \"required\": [\"assessment_name\", \"weight\", \"deadline\"]\n      }\n    }\n  },\n  \"required\": [\"course_name\", \"course_code\", \"assessments\"]\n}"
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        560,
-        608
+        656,
+        640
       ],
-      "id": "cd30e24f-d87c-4641-9de7-d960ec1ec50d",
+      "id": "17d25e07-6b37-494d-8b18-1ad96e0c9d3a",
       "name": "Structured Output Parser2"
     },
     {
@@ -467,10 +478,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        752,
-        272
+        848,
+        304
       ],
-      "id": "78231464-e248-414f-96cd-58bb10554d93",
+      "id": "3119542a-a1cc-43cc-bca2-d8801b58e1c7",
       "name": "Validate Syllabus Extraction"
     },
     {
@@ -482,10 +493,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        976,
-        272
+        1072,
+        304
       ],
-      "id": "39dca545-60cd-437a-8498-feb4539c8da8",
+      "id": "8a90b83d-71d9-4a1f-b96e-c59c56cbf6c3",
       "name": "Return Syllabus Review"
     },
     {
@@ -500,10 +511,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -80,
-        752
+        16,
+        784
       ],
-      "id": "6ba4b25a-54ee-45c6-9c71-241e967bfe04",
+      "id": "a36baead-3865-406b-93e1-7eaf7d83c2ce",
       "name": "Confirm Syllabus Webhook",
       "webhookId": "2bac74e4-ad53-4cf8-8e92-0ee18b184251"
     },
@@ -599,14 +610,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        288,
-        752
+        384,
+        784
       ],
-      "id": "44aa8ff6-76ab-4a6b-b11c-c6547761b3bb",
+      "id": "01164645-3f34-47d1-b3c9-9ed203b1c4d6",
       "name": "Save Confirmed Course",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -618,10 +629,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        96,
-        752
+        192,
+        784
       ],
-      "id": "975c2ec0-8591-455a-823b-bf077f1e5e2a",
+      "id": "b2ea6c08-7375-4d70-a484-e7764428086d",
       "name": "Prepare Confirmed Course"
     },
     {
@@ -631,10 +642,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        496,
-        752
+        592,
+        784
       ],
-      "id": "7fb2efb5-2688-4004-9184-16c634986879",
+      "id": "5f099aed-0726-48ae-8df1-6b5302cd6d65",
       "name": "Prepare Assessments"
     },
     {
@@ -749,14 +760,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        752,
-        752
+        848,
+        784
       ],
-      "id": "2287c0aa-ec67-4779-841e-3ab876e1c6a1",
+      "id": "a9b73e75-9151-41fa-9d0e-4dfccd29c3c1",
       "name": "Append row in sheet",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -770,10 +781,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        960,
-        752
+        1056,
+        784
       ],
-      "id": "23f1373b-1b8f-41b9-9df4-176d05f0170f",
+      "id": "a7d6ed19-e40c-47e7-9b7d-b0b9287024eb",
       "name": "Confirm Course Response"
     },
     {
@@ -788,10 +799,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -80,
-        944
+        16,
+        976
       ],
-      "id": "8ca7d60e-ddb0-4153-8fda-0c8413d60efa",
+      "id": "39d887ed-5b7a-4250-af3d-7b5848c32d2e",
       "name": "Grade Update Webhook",
       "webhookId": "30617fce-2a96-4010-a16c-041ab50748ee"
     },
@@ -916,14 +927,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        368,
-        944
+        464,
+        976
       ],
-      "id": "30fdafa6-8a24-45d2-8827-c42ed05bf305",
+      "id": "a1e1ef1c-f937-4d13-90f6-52cd0bdbc8a1",
       "name": "Update Assessment Grade",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -935,10 +946,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        144,
-        944
+        240,
+        976
       ],
-      "id": "4aaf6614-5769-4ef5-966b-65f20f906fa0",
+      "id": "4e46cb2f-261e-46ea-8332-188422b83ca4",
       "name": "Prepare Grade Update"
     },
     {
@@ -970,14 +981,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        592,
-        944
+        688,
+        976
       ],
-      "id": "85d3a02d-f5d6-4ca0-b4d6-1019fe59553f",
+      "id": "77c45ce2-13bd-436d-97c6-e3a48c0be604",
       "name": "Get Student After Grade",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -1011,14 +1022,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        816,
-        944
+        912,
+        976
       ],
-      "id": "e430e982-1b68-4074-aa0b-2605d8d36a57",
+      "id": "e45efb00-38f1-4c81-9c17-ef3a1f0c6535",
       "name": "Get Courses After Grade",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -1044,18 +1055,18 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1040,
-        944
+        1136,
+        976
       ],
-      "id": "151da37f-584f-4726-bf2e-44ae7f3b12fc",
+      "id": "9e0bb5f5-f5c9-47e9-ab66-391b51f8dfdc",
       "name": "Get Assessments After Grade",
+      "executeOnce": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
-      },
-      "executeOnce": true
+      }
     },
     {
       "parameters": {
@@ -1064,10 +1075,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1264,
-        944
+        1360,
+        976
       ],
-      "id": "1f613883-d7d6-46f5-8d29-8ceaa487976a",
+      "id": "152235b4-8cc5-419c-8b49-9e95f0d77198",
       "name": "Recalculate Academic State"
     },
     {
@@ -1080,28 +1091,29 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1488,
-        944
+        1584,
+        976
       ],
-      "id": "6b74cb24-8030-4425-9a5f-ed36232ea143",
+      "id": "e82c34b6-3351-4c29-b6f7-e2a6c51dc12f",
       "name": "Re-Analyze Academic State"
     },
     {
       "parameters": {
-        "options": {}
+        "options": {},
+        "modelName": "models/gemini-3.1-flash-lite"
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        1360,
-        1152
+        1456,
+        1184
       ],
-      "id": "cd26a890-7443-4309-ac7c-bc0f057c7290",
+      "id": "ee1aab00-864a-494b-87ee-8ee894abae53",
       "name": "Google Gemini Chat Model3",
       "credentials": {
         "googlePalmApi": {
-          "id": "wbd2N9u62pgZlZns",
-          "name": "Google Gemini(PaLM) Api account"
+          "id": "6ksnh4PfvnkOdYZP",
+          "name": "Google Gemini(PaLM) Api account 2"
         }
       }
     },
@@ -1112,10 +1124,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        1664,
-        1152
+        1760,
+        1184
       ],
-      "id": "4f9fc0c5-93de-4354-a86c-9a8e8ecc5f2c",
+      "id": "6d456dab-cc8f-4a74-957d-001a97009a2c",
       "name": "Structured Output Parser3"
     },
     {
@@ -1128,28 +1140,29 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1856,
-        944
+        1952,
+        976
       ],
-      "id": "e352cd88-c677-410d-ae77-eacf540cb4d9",
+      "id": "99fc54c1-1207-4fb4-8444-5aa0fa9b61ad",
       "name": "Adaptive Planner Agent"
     },
     {
       "parameters": {
-        "options": {}
+        "options": {},
+        "modelName": "models/gemini-3.1-flash-lite"
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        1776,
-        1200
+        1872,
+        1232
       ],
-      "id": "ed6ec653-417c-416f-a3f7-7bd5afc501cc",
+      "id": "dfca0e36-85aa-4809-afda-c22078fce1a7",
       "name": "Google Gemini Chat Model4",
       "credentials": {
         "googlePalmApi": {
-          "id": "wbd2N9u62pgZlZns",
-          "name": "Google Gemini(PaLM) Api account"
+          "id": "6ksnh4PfvnkOdYZP",
+          "name": "Google Gemini(PaLM) Api account 2"
         }
       }
     },
@@ -1160,10 +1173,10 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        2032,
-        1152
+        2128,
+        1184
       ],
-      "id": "28d7ceca-89dd-4e3a-9390-77f44718d7e1",
+      "id": "b93a24c5-7514-44f5-8abf-1f3aca135a50",
       "name": "Structured Output Parser4"
     },
     {
@@ -1173,10 +1186,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2224,
-        944
+        2320,
+        976
       ],
-      "id": "b9b18b67-b712-4125-8154-94410b66c866",
+      "id": "86537823-3ec9-40b5-9ead-b77f87079d0c",
       "name": "Format Adaptive Study Plan"
     },
     {
@@ -1291,14 +1304,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2448,
-        944
+        2544,
+        976
       ],
-      "id": "b37a00d4-16ab-47a4-b92c-cd34f699ea27",
+      "id": "adea39c2-b846-4c57-947b-8ad87baf36aa",
       "name": "Save Adaptive Study Plan",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -1312,10 +1325,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2672,
-        944
+        2768,
+        976
       ],
-      "id": "e797a438-99ef-4817-bd25-b9014358035b",
+      "id": "43fa1e29-019e-417c-9b79-be1cc30c5eef",
       "name": "Grade Update Response"
     },
     {
@@ -1330,10 +1343,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -80,
-        1264
+        16,
+        1296
       ],
-      "id": "c799fe45-2874-4077-8622-d2983fbdf8ca",
+      "id": "0856f299-01cf-47fa-8864-9bf7499f032b",
       "name": "Create Account Webhook",
       "webhookId": "25b393df-0910-4e65-9982-7606f49e8224"
     },
@@ -1366,15 +1379,15 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        144,
-        1264
+        240,
+        1296
       ],
-      "id": "e43cd9cd-8a70-4463-b41f-23673edf99a6",
+      "id": "96fed7c0-280d-4e1c-ab87-e218d6b58883",
       "name": "Check Existing Email",
       "alwaysOutputData": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -1407,10 +1420,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        368,
-        1264
+        464,
+        1296
       ],
-      "id": "1cc27130-b8b7-40ad-996e-1cf98c805601",
+      "id": "b3504795-0319-4d44-bb6d-d5627a1921cd",
       "name": "Email Already Exists?"
     },
     {
@@ -1422,10 +1435,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        592,
-        1168
+        688,
+        1200
       ],
-      "id": "858f692f-ff81-440b-8615-893e02dabaf7",
+      "id": "4d1ac97a-9bf5-4341-904a-1e52f2c05732",
       "name": "Account Already Exists Response"
     },
     {
@@ -1435,10 +1448,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        528,
-        1344
+        624,
+        1376
       ],
-      "id": "46d7fdc4-8a81-44b9-a4d8-817d5c1545fc",
+      "id": "fd937287-0387-4134-a1d8-5cd7514705b4",
       "name": "Prepare New Account"
     },
     {
@@ -1449,10 +1462,10 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 2,
       "position": [
-        752,
-        1344
+        848,
+        1376
       ],
-      "id": "3eea8c92-6e69-4d27-b1e9-c48d943535c0",
+      "id": "aac49c51-8d3e-4890-a56e-2f68302ab618",
       "name": "Hash Password"
     },
     {
@@ -1587,14 +1600,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        896,
-        1344
+        992,
+        1376
       ],
-      "id": "c5c54a3f-c3bd-4c44-96bb-ed5f8c80d54b",
+      "id": "2afd9028-b799-4285-b64e-3b063a97bafc",
       "name": "Save New Account",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -1608,10 +1621,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1120,
-        1344
+        1216,
+        1376
       ],
-      "id": "85c386c7-3e03-4aa2-a846-c611e575fcd2",
+      "id": "26d75db7-6c5b-4ff2-96a6-588ff1458871",
       "name": "Account Created Response"
     },
     {
@@ -1642,10 +1655,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        352,
-        1728
+        448,
+        1760
       ],
-      "id": "2cbabde7-27e6-4b57-b302-439aef9a4894",
+      "id": "3ad362b5-1592-4975-b506-1db9f4e23f56",
       "name": "Login Account Exists?"
     },
     {
@@ -1677,15 +1690,15 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        128,
-        1728
+        224,
+        1760
       ],
-      "id": "ea212427-1b04-4d21-a04a-2565dc5592b3",
+      "id": "fb16653e-8138-464c-83bf-a2be4f0c6083",
       "name": "Find Student by Email",
       "alwaysOutputData": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "3NGLYcD26SMfPV4G",
+          "id": "CZ5iJHXAC0LJEGPe",
           "name": "Google Sheets account"
         }
       }
@@ -1702,10 +1715,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -80,
-        1728
+        16,
+        1760
       ],
-      "id": "c6b2eb0b-266e-4400-928b-f42b098e8ba8",
+      "id": "6246b3cb-5160-4839-9ef3-f334a94303cd",
       "name": "Login Webhook",
       "webhookId": "a132aeeb-b438-4a89-9bef-f45d08f9ca8c"
     },
@@ -1718,10 +1731,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        880,
-        1904
+        976,
+        1936
       ],
-      "id": "419ea006-72dc-4756-bb27-49259d2086e9",
+      "id": "b0f8b850-e24c-40b5-b3ed-fb98ed249973",
       "name": "Invalid Login Response"
     },
     {
@@ -1732,10 +1745,10 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 2,
       "position": [
-        576,
-        1632
+        672,
+        1664
       ],
-      "id": "459651d4-47e9-4ce8-9908-cd144902b71d",
+      "id": "fe2d1912-65a1-4d48-a4f9-d7be79b66fad",
       "name": "Hash Login Password"
     },
     {
@@ -1766,10 +1779,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        800,
-        1632
+        896,
+        1664
       ],
-      "id": "a38c8bb2-8a61-45c0-a5cb-87435b8a6b0a",
+      "id": "51d7f0ea-9983-4f16-b5d0-e428c944a693",
       "name": "Password Correct?"
     },
     {
@@ -1781,23 +1794,23 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1024,
-        1536
+        1120,
+        1568
       ],
-      "id": "f5c90702-9e53-43ac-b97f-4140b9d29be0",
+      "id": "5dcee331-ce71-4c9e-99d0-c31bc575fa45",
       "name": "Login Success Response"
     },
     {
       "parameters": {
         "jsCode": "const state    = $('Calculate Academic State').all().map(i => i.json);\nconst analysis = $('Academic Analyst Agent').first().json.output || {};\nconst plan     = $('Format Study Plan').all().map(i => i.json);\n\nconst today = new Date().toISOString().slice(0, 10);\nconst DAY = 86400000;\nconst t0 = new Date(today).getTime();\n\nconst courses = state.map(s => {\n  const a = (analysis.courses || []).find(c => String(c.course_id) === String(s.course_id)) || {};\n\n  const earned    = Number(s.weighted_contribution) || 0;\n  const remaining = Number(s.remaining_weight) || 0;\n  const target    = Number(s.target_grade) || 80;\n\n  const maxAchievable  = Math.min(100, earned + remaining);\n  const neededTarget   = remaining > 0 ? Number((((target - earned) / remaining) * 100).toFixed(2)) : null;\n  const neededPass     = remaining > 0 ? Number((((60 - earned) / remaining) * 100).toFixed(2)) : null;\n\n  const assessments = (s.assessments || []).map(x => {\n    const raw = x.grade;\n    const graded = raw !== '' && raw !== null && raw !== undefined;\n    const due = x.deadline || x.due_date || '';\n    let days = null;\n    if (due) {\n      const d = new Date(due).getTime();\n      if (!isNaN(d)) days = Math.round((d - t0) / DAY);\n    }\n    return {\n      assessment_id: x.assessment_id,\n      name: x.assessment_name || x.name || 'Assessment',\n      weight: Number(x.weight) || 0,\n      grade: graded ? Number(raw) : null,\n      due_date: due,\n      days_until_due: days,\n      status: graded ? 'Completed' : 'Upcoming',\n    };\n  });\n\n  const next = assessments\n    .filter(x => x.status !== 'Completed' && x.days_until_due !== null && x.days_until_due >= 0)\n    .sort((p, q) => p.days_until_due - q.days_until_due)[0];\n\n  return {\n    course_id: String(s.course_id),\n    course_code: s.course_code || '',\n    course_name: s.course_name,\n    target_grade: target,\n    current_average: Number(s.current_average),\n    points_earned_so_far: earned,\n    completed_weight: Number(s.completed_weight) || 0,\n    remaining_weight: remaining,\n    max_achievable_grade: Number(maxAchievable.toFixed(2)),\n    needed_avg_on_remaining_for_target: neededTarget,\n    needed_avg_on_remaining_to_pass: neededPass,\n    target_reachable: remaining > 0 ? neededTarget <= 100 : earned >= target,\n    pass_reachable:   remaining > 0 ? neededPass   <= 100 : earned >= 60,\n    risk_level: a.risk_level || 'MEDIUM',\n    priority: a.priority || 99,\n    recommended_weekly_hours: a.recommended_weekly_hours || 0,\n    next_deadline_in_days: next ? next.days_until_due : null,\n    reason: a.reason || '',\n    focus: a.focus || [],\n    assessments: assessments,\n  };\n});\n\nreturn [{ json: {\n  success: true,\n  student_id: analysis.student_id || (state[0] && state[0].student_id) || '',\n  overall_status: analysis.overall_status || 'AT_RISK',\n  available_weekly_study_hours: Number(state[0] && state[0].weekly_study_hours) || 15,\n  today: today,\n  courses: courses,\n  study_plan: plan,\n}}];"
       },
-      "id": "ffee0001-0000-4000-8000-000000000001",
+      "id": "8e24b9ba-5973-45af-a0eb-c991bb77dd23",
       "name": "Build Analysis Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2364,
-        -32
+        2464,
+        0
       ],
       "executeOnce": true
     },
@@ -1807,15 +1820,50 @@
         "responseBody": "={{ JSON.stringify($json) }}",
         "options": {}
       },
-      "id": "ffee0001-0000-4000-8000-000000000002",
+      "id": "6a99f3fa-5704-44fa-8897-f2f3fdecb46d",
       "name": "Return Analysis",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2584,
-        -32
+        2688,
+        0
       ],
       "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "/* Risk Alert filter\n   Keeps only HIGH / CRITICAL courses from the Academic Analyst Agent and\n   attaches the student's name + email, which \"Get student\" already read from\n   the Students sheet at the start of this execution.\n\n   Returning [] stops the branch, so no email is sent when nothing is at risk.\n   We deliberately do NOT add a second Google Sheets read here: a Sheets node\n   placed after a multi-item node runs once per item and returns the whole tab\n   each time (HANDOFF trap 8). */\n\nconst analysis = $input.first().json.output || {};\nconst courses  = (analysis.courses || []).filter(\n  c => c.risk_level === 'HIGH' || c.risk_level === 'CRITICAL'\n);\n\nif (!courses.length) return [];\n\nconst student = $('Get student').first().json || {};\nconst email   = String(student.email || '').trim();\n\nif (!email) return [];\n\nreturn courses\n  .sort((a, b) => (a.priority || 99) - (b.priority || 99))\n  .map(c => ({\n    json: {\n      student_id:    analysis.student_id || student.student_id || '',\n      student_name:  student.name || 'there',\n      student_email: email,\n      course_name:   c.course_name || 'your course',\n      risk_level:    c.risk_level,\n      reason:        c.reason || 'No reason was returned by the analyst.',\n      recommended_weekly_hours: c.recommended_weekly_hours ?? 0,\n      focus: Array.isArray(c.focus) ? c.focus.join(', ') : String(c.focus || ''),\n    },\n  }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        416
+      ],
+      "id": "ffee0002-0000-4000-8000-000000000001",
+      "name": "Filter Risk Courses"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.student_email }}",
+        "subject": "=Academic Risk Alert - {{ $json.course_name }}",
+        "emailType": "text",
+        "message": "=Hi {{ $json.student_name }},\n\nYour Academic Recovery Agent has detected that {{ $json.course_name }} is currently at {{ $json.risk_level }} academic risk.\n\nReason:\n{{ $json.reason }}\n\nRecommended Study Time:\n{{ $json.recommended_weekly_hours }} hours this week\n\nFocus Areas:\n{{ $json.focus }}\n\nOpen your Academic Recovery Agent dashboard to review your recovery plan:\nhttps://academic-recovery-agent.vercel.app/dashboard.html\n\n- AI Academic Recovery Agent\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1536,
+        416
+      ],
+      "id": "ffee0002-0000-4000-8000-000000000002",
+      "name": "Send Risk Alert Email",
+      "webhookId": "ffee0002-0000-4000-8000-0000000000e1",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
     }
   ],
   "pinData": {},
@@ -1880,6 +1928,11 @@
         [
           {
             "node": "Planner Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Risk Courses",
             "type": "main",
             "index": 0
           }
@@ -2238,11 +2291,6 @@
         ]
       ]
     },
-    "Grade Update Response": {
-      "main": [
-        []
-      ]
-    },
     "Create Account Webhook": {
       "main": [
         [
@@ -2406,19 +2454,30 @@
           }
         ]
       ]
+    },
+    "Filter Risk Courses": {
+      "main": [
+        [
+          {
+            "node": "Send Risk Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "2584d2da-e448-446e-9153-44d005b1c7ae",
+  "versionId": "9f12875d-055e-4bb9-a452-b19bb50ad0ae",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "247c9734bcc70380b955217eb852a260a57a55b2e54d8f5e3798b93d05e692ea"
+    "instanceId": "25e48049e4250284a6205f1af60f7ac8ab371335062837de2cb8973ceb304630"
   },
   "nodeGroups": [],
-  "id": "ZlCZYuEXBAA2Gw3t",
+  "id": "GoD7hKR3XZ0BcgWV",
   "tags": []
 }

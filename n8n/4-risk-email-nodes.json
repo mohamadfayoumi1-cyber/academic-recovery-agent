@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "instanceId": "academic-recovery-agent"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "/* Risk Alert filter\n   Keeps only HIGH / CRITICAL courses from the Academic Analyst Agent and\n   attaches the student's name + email, which \"Get student\" already read from\n   the Students sheet at the start of this execution.\n\n   Returning [] stops the branch, so no email is sent when nothing is at risk.\n   We deliberately do NOT add a second Google Sheets read here: a Sheets node\n   placed after a multi-item node runs once per item and returns the whole tab\n   each time (HANDOFF trap 8). */\n\nconst analysis = $input.first().json.output || {};\nconst courses  = (analysis.courses || []).filter(\n  c => c.risk_level === 'HIGH' || c.risk_level === 'CRITICAL'\n);\n\nif (!courses.length) return [];\n\nconst student = $('Get student').first().json || {};\nconst email   = String(student.email || '').trim();\n\nif (!email) return [];\n\nreturn courses\n  .sort((a, b) => (a.priority || 99) - (b.priority || 99))\n  .map(c => ({\n    json: {\n      student_id:    analysis.student_id || student.student_id || '',\n      student_name:  student.name || 'there',\n      student_email: email,\n      course_name:   c.course_name || 'your course',\n      risk_level:    c.risk_level,\n      reason:        c.reason || 'No reason was returned by the analyst.',\n      recommended_weekly_hours: c.recommended_weekly_hours ?? 0,\n      focus: Array.isArray(c.focus) ? c.focus.join(', ') : String(c.focus || ''),\n    },\n  }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        416
+      ],
+      "id": "ffee0002-0000-4000-8000-000000000001",
+      "name": "Filter Risk Courses"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.student_email }}",
+        "subject": "=Academic Risk Alert - {{ $json.course_name }}",
+        "emailType": "text",
+        "message": "=Hi {{ $json.student_name }},\n\nYour Academic Recovery Agent has detected that {{ $json.course_name }} is currently at {{ $json.risk_level }} academic risk.\n\nReason:\n{{ $json.reason }}\n\nRecommended Study Time:\n{{ $json.recommended_weekly_hours }} hours this week\n\nFocus Areas:\n{{ $json.focus }}\n\nOpen your Academic Recovery Agent dashboard to review your recovery plan:\nhttps://academic-recovery-agent.vercel.app/dashboard.html\n\n- AI Academic Recovery Agent\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1536,
+        416
+      ],
+      "id": "ffee0002-0000-4000-8000-000000000002",
+      "name": "Send Risk Alert Email",
+      "webhookId": "ffee0002-0000-4000-8000-0000000000e1",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Filter Risk Courses": {
+      "main": [
+        [
+          {
+            "node": "Send Risk Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}
